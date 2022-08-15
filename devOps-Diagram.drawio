@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2022-08-15T09:40:14.298Z" agent="5.0 (Windows)" etag="gmpOsqnaZ7ywfuA-GfWc" version="20.2.2" type="github">
+<mxfile host="app.diagrams.net" modified="2022-08-15T10:01:39.402Z" agent="5.0 (Windows)" etag="PUJ1eOveCcQ6KfkFHriC" version="20.2.2" type="github">
   <diagram name="Page-1" id="efa7a0a1-bf9b-a30e-e6df-94a7791c09e9">
     <mxGraphModel dx="2522" dy="474" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="2336" background="none" math="0" shadow="0">
       <root>
@@ -223,6 +223,9 @@
             <mxPoint x="-920" y="680" as="sourcePoint" />
             <mxPoint x="-920" y="360" as="targetPoint" />
           </mxGeometry>
+        </mxCell>
+        <mxCell id="INLknhOb2TVLwJIKxnAG-43" value="" style="shape=image;verticalLabelPosition=bottom;labelBackgroundColor=default;verticalAlign=top;aspect=fixed;imageAspect=0;image=https://upload.wikimedia.org/wikipedia/en/thumb/7/7e/Datadog_logo.svg/1200px-Datadog_logo.svg.png;" vertex="1" parent="1">
+          <mxGeometry x="460" y="520" width="260" height="260" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
