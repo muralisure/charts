@@ -1,3 +1,8 @@
+/*
+ * Copyright VMware, Inc.
+ * SPDX-License-Identifier: APACHE-2.0
+ */
+
 // ***********************************************************
 // This example support/index.js is processed and
 // loaded automatically before your test files.
@@ -18,3 +23,13 @@ import './commands';
 
 // Alternatively you can use CommonJS syntax:
 // require('./commands')
+
+Cypress.on('uncaught:exception', (err, runnable) => {
+  // Discourse header returns an internal ResizeObserver
+  // max loop error (from javascript), but the application
+  // works just fine. Returning false here prevents Cypress
+  // from failing the test.
+  if (err.message.includes('ResizeObserver loop limit')) {
+    return false
+  }
+})

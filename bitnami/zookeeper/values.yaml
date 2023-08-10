@@ -1,3 +1,6 @@
+# Copyright VMware, Inc.
+# SPDX-License-Identifier: APACHE-2.0
+
 ## @section Global parameters
 ## Global Docker image parameters
 ## Please, note that this will override the image parameters, including dependencies, configured to use the global value
@@ -68,6 +71,7 @@ diagnosticMode:
 ## @param image.registry ZooKeeper image registry
 ## @param image.repository ZooKeeper image repository
 ## @param image.tag ZooKeeper image tag (immutable tags are recommended)
+## @param image.digest ZooKeeper image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
 ## @param image.pullPolicy ZooKeeper image pull policy
 ## @param image.pullSecrets Specify docker-registry secret names as an array
 ## @param image.debug Specify if debug values should be set
@@ -75,7 +79,8 @@ diagnosticMode:
 image:
   registry: docker.io
   repository: bitnami/zookeeper
-  tag: 3.8.0-debian-11-r6
+  tag: 3.8.2-debian-11-r7
+  digest: ""
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
   ## ref: https://kubernetes.io/docs/user-guide/images/#pre-pulling-images
@@ -330,11 +335,13 @@ podSecurityContext:
 ## @param containerSecurityContext.enabled Enabled ZooKeeper containers' Security Context
 ## @param containerSecurityContext.runAsUser Set ZooKeeper containers' Security Context runAsUser
 ## @param containerSecurityContext.runAsNonRoot Set ZooKeeper containers' Security Context runAsNonRoot
+## @param containerSecurityContext.allowPrivilegeEscalation Force the child process to be run as nonprivilege
 ##
 containerSecurityContext:
   enabled: true
   runAsUser: 1001
   runAsNonRoot: true
+  allowPrivilegeEscalation: false
 ## @param hostAliases ZooKeeper pods host aliases
 ## https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/
 ##
@@ -535,10 +542,12 @@ service:
   extraPorts: []
   ## @param service.headless.annotations Annotations for the Headless Service
   ## @param service.headless.publishNotReadyAddresses If the ZooKeeper headless service should publish DNS records for not ready pods
+  ## @param service.headless.servicenameOverride String to partially override headless service name
   ##
   headless:
     publishNotReadyAddresses: true
     annotations: {}
+    servicenameOverride: ""
 ## Network policies
 ## Ref: https://kubernetes.io/docs/concepts/services-networking/network-policies/
 ##
@@ -603,6 +612,9 @@ persistence:
   ## @param persistence.annotations Annotations for the PVC
   ##
   annotations: {}
+  ## @param persistence.labels Labels for the PVC
+  ##
+  labels: {}
   ## @param persistence.selector Selector to match an existing Persistent Volume for ZooKeeper's data PVC
   ## If set, the PVC can't have a PV dynamically provisioned for it
   ## E.g.
@@ -644,13 +656,15 @@ volumePermissions:
   ## @param volumePermissions.image.registry Init container volume-permissions image registry
   ## @param volumePermissions.image.repository Init container volume-permissions image repository
   ## @param volumePermissions.image.tag Init container volume-permissions image tag (immutable tags are recommended)
+  ## @param volumePermissions.image.digest Init container volume-permissions image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
   ## @param volumePermissions.image.pullPolicy Init container volume-permissions image pull policy
   ## @param volumePermissions.image.pullSecrets Init container volume-permissions image pull secrets
   ##
   image:
     registry: docker.io
-    repository: bitnami/bitnami-shell
-    tag: 11-debian-11-r4
+    repository: bitnami/os-shell
+    tag: 11-debian-11-r19
+    digest: ""
     pullPolicy: IfNotPresent
     ## Optionally specify an array of imagePullSecrets.
     ## Secrets must be manually created in the namespace.
@@ -671,9 +685,11 @@ volumePermissions:
   ## Init container' Security Context
   ## Note: the chown of the data folder is done to containerSecurityContext.runAsUser
   ## and not the below volumePermissions.containerSecurityContext.runAsUser
+  ## @param volumePermissions.containerSecurityContext.enabled Enabled init container Security Context
   ## @param volumePermissions.containerSecurityContext.runAsUser User ID for the init container
   ##
   containerSecurityContext:
+    enabled: true
     runAsUser: 0
 
 ## @section Metrics parameters
@@ -724,7 +740,7 @@ metrics:
     ##
     additionalLabels: {}
     ## @param metrics.serviceMonitor.selector Prometheus instance selector labels
-    ## ref: https://github.com/bitnami/charts/tree/master/bitnami/prometheus-operator#prometheus-configuration
+    ## ref: https://github.com/bitnami/charts/tree/main/bitnami/prometheus-operator#prometheus-configuration
     ##
     selector: {}
     ## @param metrics.serviceMonitor.relabelings RelabelConfigs to apply to samples before scraping

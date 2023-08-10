@@ -1,3 +1,6 @@
+# Copyright VMware, Inc.
+# SPDX-License-Identifier: APACHE-2.0
+
 ## @section Global parameters
 ## Global Docker image parameters
 ## Please, note that this will override the image parameters, including dependencies, configured to use the global value
@@ -58,13 +61,14 @@ diagnosticMode:
 
 ## @section Redmine Configuration parameters
 ## Redmine settings based on environment variables
-## ref: https://github.com/bitnami/bitnami-docker-redmine#environment-variables
+## ref: https://github.com/bitnami/containers/tree/main/bitnami/redmine#environment-variables
 
 ## Bitnami Redmine image
 ## ref: https://hub.docker.com/r/bitnami/redmine/tags/
 ## @param image.registry Redmine image registry
 ## @param image.repository Redmine image repository
 ## @param image.tag Redmine image tag (immutable tags are recommended)
+## @param image.digest Redmine image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
 ## @param image.pullPolicy Redmine image pull policy
 ## @param image.pullSecrets [array] Redmine image pull secrets
 ## @param image.debug Enable image debug mode
@@ -72,7 +76,8 @@ diagnosticMode:
 image:
   registry: docker.io
   repository: bitnami/redmine
-  tag: 5.0.2-debian-11-r0
+  tag: 5.0.5-debian-11-r52
+  digest: ""
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
   ## ref: https://kubernetes.io/docs/user-guide/images/#pre-pulling-images
@@ -107,7 +112,7 @@ redmineLanguage: en
 ##
 allowEmptyPassword: false
 ## SMTP mail delivery configuration
-## ref: https://github.com/bitnami/bitnami-docker-redmine/#smtp-configuration
+## ref: https://github.com/bitnami/containers/tree/main/bitnami/redmine/#smtp-configuration
 ## @param smtpHost SMTP server host
 ## @param smtpPort SMTP server port
 ## @param smtpUser SMTP username
@@ -630,11 +635,11 @@ autoscaling:
 ## @section Database Parameters
 
 ## @param databaseType Redmine database type. Allowed values: `mariadb` and `postgresql`
-## ref: https://github.com/bitnami/bitnami-docker-redmine/#environment-variables
+## ref: https://github.com/bitnami/containers/tree/main/bitnami/redmine/#environment-variables
 ##
 databaseType: mariadb
 ## MariaDB chart configuration
-## ref: https://github.com/bitnami/charts/blob/master/bitnami/mariadb/values.yaml
+## ref: https://github.com/bitnami/charts/blob/main/bitnami/mariadb/values.yaml
 ## @param mariadb.enabled Switch to enable or disable the MariaDB helm chart
 ## @param mariadb.auth.rootPassword MariaDB root password
 ## @param mariadb.auth.username MariaDB username
@@ -651,7 +656,7 @@ mariadb:
     existingSecret: ""
   architecture: standalone
 ## PostgreSQL chart configuration
-## ref: https://github.com/bitnami/charts/blob/master/bitnami/postgresql/values.yaml
+## ref: https://github.com/bitnami/charts/blob/main/bitnami/postgresql/values.yaml
 ## @param postgresql.enabled Switch to enable or disable the PostgreSQL helm chart
 ## @param postgresql.auth.username Name for a custom user to create
 ## @param postgresql.auth.password Password for the custom user to create
@@ -933,13 +938,15 @@ certificates:
   ## @param certificates.image.registry Redmine image registry
   ## @param certificates.image.repository Redmine image repository
   ## @param certificates.image.tag Redmine image tag (immutable tags are recommended)
+  ## @param certificates.image.digest Redmine image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
   ## @param certificates.image.pullPolicy Redmine image pull policy
   ## @param certificates.image.pullSecrets [array] Redmine image pull secrets
   ##
   image:
     registry: docker.io
-    repository: bitnami/bitnami-shell
-    tag: 11-debian-11-r6
+    repository: bitnami/os-shell
+    tag: 11-debian-11-r22
+    digest: ""
     ## Specify a imagePullPolicy
     ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
     ## ref: https://kubernetes.io/docs/user-guide/images/#pre-pulling-images

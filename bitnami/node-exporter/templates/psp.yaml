@@ -1,9 +1,14 @@
+{{- /*
+Copyright VMware, Inc.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
+
 {{- $pspAvailable := (semverCompare "<1.25-0" (include "common.capabilities.kubeVersion" .)) -}}
 {{- if and $pspAvailable .Values.rbac.create .Values.rbac.pspEnabled }}
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
 metadata:
-  name: {{ template "common.names.fullname" . }}
+  name: {{ template "common.names.fullname.namespace" . }}
   namespace: {{ include "common.names.namespace" . | quote }}
   labels: {{- include "common.labels.standard" . | nindent 4 }}
     {{- if .Values.commonLabels }}
@@ -27,7 +32,7 @@ spec:
     - 'hostPath'
   hostNetwork: true
   hostIPC: false
-  hostPID: true
+  hostPID: {{ .Values.hostPID }}
   hostPorts:
     - min: 0
       max: 65535

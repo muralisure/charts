@@ -1,8 +1,13 @@
+{{- /*
+Copyright VMware, Inc.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
+
 {{- if (include "elasticsearch.coordinating.enabled" .) }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ printf "%s-hl" (include "elasticsearch.coordinating.fullname" .) | trunc 63 | trimSuffix "-" }}
+  name: {{ include "elasticsearch.coordinating.servicename" . }}
   namespace: {{ include "common.names.namespace" . | quote }}
   labels: {{- include "common.labels.standard" . | nindent 4 }}
     app.kubernetes.io/component: coordinating-only

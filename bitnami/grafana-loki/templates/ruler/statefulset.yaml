@@ -1,4 +1,9 @@
-{{- if .Values.indexGateway.enabled }}
+{{- /*
+Copyright VMware, Inc.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
+
+{{- if .Values.ruler.enabled }}
 apiVersion: {{ include "common.capabilities.statefulset.apiVersion" . }}
 kind: StatefulSet
 metadata:
@@ -121,6 +126,9 @@ spec:
           args:
             - -target=ruler
             - -config.file={{ .Values.loki.dataDir }}/conf/loki.yaml
+          {{- if .Values.ruler.extraArgs }}
+          {{- include "common.tplvalues.render" (dict "value" .Values.ruler.extraArgs "context" $) | nindent 12 }}
+          {{- end }}
           {{- end }}
           {{- if .Values.ruler.extraEnvVars }}
           env: {{- include "common.tplvalues.render" (dict "value" .Values.ruler.extraEnvVars "context" $) | nindent 12 }}
@@ -145,26 +153,26 @@ spec:
           resources: {{- toYaml .Values.ruler.resources | nindent 12 }}
           {{- end }}
           {{- if not .Values.diagnosticMode.enabled }}
-          {{- if .Values.ruler.livenessProbe.enabled }}
+          {{- if .Values.ruler.customLivenessProbe }}
+          livenessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.ruler.customLivenessProbe "context" $) | nindent 12 }}
+          {{- else if .Values.ruler.livenessProbe.enabled }}
           livenessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.ruler.livenessProbe "enabled") "context" $) | nindent 12 }}
             tcpSocket:
               port: http
-          {{- else if .Values.ruler.customLivenessProbe }}
-          livenessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.ruler.customLivenessProbe "context" $) | nindent 12 }}
           {{- end }}
-          {{- if .Values.ruler.readinessProbe.enabled }}
+          {{- if .Values.ruler.customReadinessProbe }}
+          readinessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.ruler.customReadinessProbe "context" $) | nindent 12 }}
+          {{- else if .Values.ruler.readinessProbe.enabled }}
           readinessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.ruler.readinessProbe "enabled") "context" $) | nindent 12 }}
             tcpSocket:
               port: http
-          {{- else if .Values.ruler.customReadinessProbe }}
-          readinessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.ruler.customReadinessProbe "context" $) | nindent 12 }}
           {{- end }}
-          {{- if .Values.ruler.startupProbe.enabled }}
+          {{- if .Values.ruler.customStartupProbe }}
+          startupProbe: {{- include "common.tplvalues.render" (dict "value" .Values.ruler.customStartupProbe "context" $) | nindent 12 }}
+          {{- else if .Values.ruler.startupProbe.enabled }}
           startupProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.ruler.startupProbe "enabled") "context" $) | nindent 12 }}
             tcpSocket:
               port: http
-          {{- else if .Values.ruler.customStartupProbe }}
-          startupProbe: {{- include "common.tplvalues.render" (dict "value" .Values.ruler.customStartupProbe "context" $) | nindent 12 }}
           {{- end }}
           {{- end }}
           {{- if .Values.ruler.lifecycleHooks }}

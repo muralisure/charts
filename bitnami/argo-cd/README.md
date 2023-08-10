@@ -7,12 +7,11 @@ Argo CD is a continuous delivery tool for Kubernetes based on GitOps.
 [Overview of Argo CD](https://argoproj.github.io/cd)
 
 Trademarks: This software listing is packaged by Bitnami. The respective trademarks mentioned in the offering are owned by the respective companies, and use of them does not imply any affiliation or endorsement.
-                           
+
 ## TL;DR
 
 ```console
-$ helm repo add bitnami https://charts.bitnami.com/bitnami
-$ helm install my-release bitnami/argo-cd
+helm install my-release oci://registry-1.docker.io/bitnamicharts/argo-cd
 ```
 
 ## Introduction
@@ -20,6 +19,8 @@ $ helm install my-release bitnami/argo-cd
 This chart bootstraps an Argo CD deployment on a Kubernetes cluster using the Helm package manager.
 
 Bitnami charts can be used with [Kubeapps](https://kubeapps.dev/) for deployment and management of Helm Charts in clusters.
+
+Looking to use Argo CD in production? Try [VMware Application Catalog](https://bitnami.com/enterprise), the enterprise edition of Bitnami Application Catalog.
 
 ## Prerequisites
 
@@ -33,7 +34,7 @@ Bitnami charts can be used with [Kubeapps](https://kubeapps.dev/) for deployment
 To install the chart with the release name `my-release`:
 
 ```console
-helm install my-release bitnami/argo-cd
+helm install my-release oci://registry-1.docker.io/bitnamicharts/argo-cd
 ```
 
 The command deploys argo-cd on the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
@@ -60,7 +61,6 @@ The command removes all the Kubernetes components associated with the chart and 
 | `global.imagePullSecrets` | Global Docker registry secret names as an array | `[]`  |
 | `global.storageClass`     | Global StorageClass for Persistent Volume(s)    | `""`  |
 
-
 ### Common parameters
 
 | Name                | Description                                        | Value           |
@@ -73,18 +73,17 @@ The command removes all the Kubernetes components associated with the chart and 
 | `clusterDomain`     | Kubernetes cluster domain name                     | `cluster.local` |
 | `extraDeploy`       | Array of extra objects to deploy with the release  | `[]`            |
 
-
 ### Argo CD image parameters
 
-| Name                | Description                                        | Value                |
-| ------------------- | -------------------------------------------------- | -------------------- |
-| `image.registry`    | Argo CD image registry                             | `docker.io`          |
-| `image.repository`  | Argo CD image repository                           | `bitnami/argo-cd`    |
-| `image.tag`         | Argo CD image tag (immutable tags are recommended) | `2.3.4-debian-11-r0` |
-| `image.pullPolicy`  | Argo CD image pull policy                          | `IfNotPresent`       |
-| `image.pullSecrets` | Argo CD image pull secrets                         | `[]`                 |
-| `image.debug`       | Enable Argo CD image debug mode                    | `false`              |
-
+| Name                | Description                                                                                             | Value                |
+| ------------------- | ------------------------------------------------------------------------------------------------------- | -------------------- |
+| `image.registry`    | Argo CD image registry                                                                                  | `docker.io`          |
+| `image.repository`  | Argo CD image repository                                                                                | `bitnami/argo-cd`    |
+| `image.tag`         | Argo CD image tag (immutable tags are recommended)                                                      | `2.8.0-debian-11-r0` |
+| `image.digest`      | Argo CD image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag | `""`                 |
+| `image.pullPolicy`  | Argo CD image pull policy                                                                               | `IfNotPresent`       |
+| `image.pullSecrets` | Argo CD image pull secrets                                                                              | `[]`                 |
+| `image.debug`       | Enable Argo CD image debug mode                                                                         | `false`              |
 
 ### Argo CD application controller parameters
 
@@ -187,6 +186,7 @@ The command removes all the Kubernetes components associated with the chart and 
 | `controller.nodeSelector`                                      | Node labels for Argo CD pods assignment                                                              | `{}`            |
 | `controller.tolerations`                                       | Tolerations for Argo CD pods assignment                                                              | `[]`            |
 | `controller.schedulerName`                                     | Name of the k8s scheduler (other than default)                                                       | `""`            |
+| `controller.shareProcessNamespace`                             | Enable shared process namespace in a pod.                                                            | `false`         |
 | `controller.topologySpreadConstraints`                         | Topology Spread Constraints for pod assignment                                                       | `[]`            |
 | `controller.updateStrategy.type`                               | Argo CD statefulset strategy type                                                                    | `RollingUpdate` |
 | `controller.priorityClassName`                                 | Argo CD pods' priorityClassName                                                                      | `""`            |
@@ -200,6 +200,239 @@ The command removes all the Kubernetes components associated with the chart and 
 | `controller.sidecars`                                          | Add additional sidecar containers to the Argo CD pod(s)                                              | `[]`            |
 | `controller.initContainers`                                    | Add additional init containers to the Argo CD pod(s)                                                 | `[]`            |
 
+### Argo CD ApplicationSet controller parameters
+
+| Name                                                               | Description                                                                                                     | Value           |
+| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- | --------------- |
+| `applicationSet.enabled`                                           | Enable ApplicationSet controller                                                                                | `false`         |
+| `applicationSet.replicaCount`                                      | The number of ApplicationSet controller pods to run                                                             | `1`             |
+| `applicationSet.command`                                           | Override default container command (useful when using custom images)                                            | `[]`            |
+| `applicationSet.defaultArgs.enableLeaderElection`                  | Enable leader election                                                                                          | `false`         |
+| `applicationSet.defaultArgs.policy`                                | Default policy                                                                                                  | `sync`          |
+| `applicationSet.defaultArgs.debug`                                 | Enable debug mode                                                                                               | `false`         |
+| `applicationSet.defaultArgs.dryRun`                                | Enable dry-run mode                                                                                             | `false`         |
+| `applicationSet.args`                                              | Override default container args (useful when using custom images). Overrides the defaultArgs.                   | `[]`            |
+| `applicationSet.extraArgs`                                         | Add extra arguments to the default arguments for the Argo CD applicationSet controller                          | `[]`            |
+| `applicationSet.logFormat`                                         | Format for the Argo CD applicationSet controller logs. Options: [text, json]                                    | `text`          |
+| `applicationSet.logLevel`                                          | Log level for the Argo CD applicationSet controller                                                             | `info`          |
+| `applicationSet.containerPorts.metrics`                            | Argo CD applicationSet controller metrics port number                                                           | `8085`          |
+| `applicationSet.containerPorts.probe`                              | Argo CD applicationSet controller probe port number                                                             | `8081`          |
+| `applicationSet.metrics.enabled`                                   | Enable Argo CD applicationSet controller metrics                                                                | `false`         |
+| `applicationSet.metrics.service.type`                              | Argo CD applicationSet controller service type                                                                  | `ClusterIP`     |
+| `applicationSet.metrics.service.port`                              | Argo CD applicationSet controller metrics service port                                                          | `8085`          |
+| `applicationSet.metrics.service.nodePort`                          | Node port for the applicationSet controller service                                                             | `""`            |
+| `applicationSet.metrics.service.clusterIP`                         | Argo CD applicationSet controller metrics service Cluster IP                                                    | `""`            |
+| `applicationSet.metrics.service.loadBalancerIP`                    | Argo CD applicationSet controller service Load Balancer IP                                                      | `""`            |
+| `applicationSet.metrics.service.loadBalancerSourceRanges`          | Argo CD applicationSet controller service Load Balancer sources                                                 | `[]`            |
+| `applicationSet.metrics.service.externalTrafficPolicy`             | Argo CD applicationSet controller service external traffic policy                                               | `Cluster`       |
+| `applicationSet.metrics.service.annotations`                       | Additional custom annotations for Argo CD applicationSet controller service                                     | `{}`            |
+| `applicationSet.metrics.service.sessionAffinity`                   | Session Affinity for Kubernetes service, can be "None" or "ClientIP"                                            | `None`          |
+| `applicationSet.metrics.service.sessionAffinityConfig`             | Additional settings for the sessionAffinity                                                                     | `{}`            |
+| `applicationSet.metrics.serviceMonitor.enabled`                    | Create ServiceMonitor Resource for scraping metrics using PrometheusOperator                                    | `false`         |
+| `applicationSet.metrics.serviceMonitor.namespace`                  | Namespace which Prometheus is running in                                                                        | `""`            |
+| `applicationSet.metrics.serviceMonitor.jobLabel`                   | The name of the label on the target service to use as the job name in prometheus.                               | `""`            |
+| `applicationSet.metrics.serviceMonitor.interval`                   | Interval at which metrics should be scraped                                                                     | `30s`           |
+| `applicationSet.metrics.serviceMonitor.scrapeTimeout`              | Timeout after which the scrape is ended                                                                         | `10s`           |
+| `applicationSet.metrics.serviceMonitor.relabelings`                | RelabelConfigs to apply to samples before scraping                                                              | `[]`            |
+| `applicationSet.metrics.serviceMonitor.metricRelabelings`          | MetricRelabelConfigs to apply to samples before ingestion                                                       | `[]`            |
+| `applicationSet.metrics.serviceMonitor.selector`                   | ServiceMonitor selector labels                                                                                  | `{}`            |
+| `applicationSet.metrics.serviceMonitor.honorLabels`                | honorLabels chooses the metric's labels on collisions with target labels                                        | `false`         |
+| `applicationSet.service.type`                                      | Argo CD applicationSet controller service type                                                                  | `ClusterIP`     |
+| `applicationSet.service.port`                                      | Argo CD applicationSet controller service port                                                                  | `7000`          |
+| `applicationSet.service.nodePort`                                  | Node port for Argo CD applicationSet controller service                                                         | `""`            |
+| `applicationSet.service.clusterIP`                                 | Argo CD applicationSet controller service Cluster IP                                                            | `""`            |
+| `applicationSet.service.loadBalancerIP`                            | Argo CD applicationSet controller service Load Balancer IP                                                      | `""`            |
+| `applicationSet.service.loadBalancerSourceRanges`                  | Argo CD applicationSet controller service Load Balancer sources                                                 | `[]`            |
+| `applicationSet.service.externalTrafficPolicy`                     | Argo CD applicationSet controller service external traffic policy                                               | `Cluster`       |
+| `applicationSet.service.annotations`                               | Additional custom annotations for Argo CD applicationSet controller service                                     | `{}`            |
+| `applicationSet.service.extraPorts`                                | Extra ports to expose (normally used with the `sidecar` value)                                                  | `[]`            |
+| `applicationSet.service.sessionAffinity`                           | Session Affinity for Kubernetes service, can be "None" or "ClientIP"                                            | `None`          |
+| `applicationSet.service.sessionAffinityConfig`                     | Additional settings for the sessionAffinity                                                                     | `{}`            |
+| `applicationSet.serviceAccount.create`                             | Specifies whether a ServiceAccount should be created                                                            | `true`          |
+| `applicationSet.serviceAccount.name`                               | The name of the ServiceAccount to use.                                                                          | `""`            |
+| `applicationSet.serviceAccount.automountServiceAccountToken`       | Automount service account token for the applicationSet controller service account                               | `true`          |
+| `applicationSet.serviceAccount.annotations`                        | Annotations for service account. Evaluated as a template. Only used if `create` is `true`.                      | `{}`            |
+| `applicationSet.podAffinityPreset`                                 | Pod affinity preset. Ignored if `applicationSet.affinity` is set. Allowed values: `soft` or `hard`              | `""`            |
+| `applicationSet.podAntiAffinityPreset`                             | Pod anti-affinity preset. Ignored if `applicationSet.affinity` is set. Allowed values: `soft` or `hard`         | `soft`          |
+| `applicationSet.nodeAffinityPreset.type`                           | Node affinity preset type. Ignored if `applicationSet.affinity` is set. Allowed values: `soft` or `hard`        | `""`            |
+| `applicationSet.nodeAffinityPreset.key`                            | Node label key to match. Ignored if `applicationSet.affinity` is set                                            | `""`            |
+| `applicationSet.nodeAffinityPreset.values`                         | Node label values to match. Ignored if `applicationSet.affinity` is set                                         | `[]`            |
+| `applicationSet.affinity`                                          | Affinity for Argo CD applicationSet controller pods assignment                                                  | `{}`            |
+| `applicationSet.podAnnotations`                                    | Annotations for Argo CD applicationSet controller pods                                                          | `{}`            |
+| `applicationSet.podLabels`                                         | Extra labels for Argo CD applicationSet controller pods                                                         | `{}`            |
+| `applicationSet.containerSecurityContext.enabled`                  | Enabled Argo CD applicationSet controller containers' Security Context                                          | `true`          |
+| `applicationSet.containerSecurityContext.runAsUser`                | Set Argo CD applicationSet controller containers' Security Context runAsUser                                    | `1001`          |
+| `applicationSet.containerSecurityContext.allowPrivilegeEscalation` | Set Argo CD applicationSet controller containers' Security Context allowPrivilegeEscalation                     | `false`         |
+| `applicationSet.containerSecurityContext.capabilities.drop`        | Set Argo CD applicationSet controller containers' Security Context capabilities to be dropped                   | `["all"]`       |
+| `applicationSet.containerSecurityContext.readOnlyRootFilesystem`   | Set Argo CD applicationSet controller containers' Security Context readOnlyRootFilesystem                       | `false`         |
+| `applicationSet.containerSecurityContext.runAsNonRoot`             | Set Argo CD applicationSet controller container's Security Context runAsNonRoot                                 | `true`          |
+| `applicationSet.livenessProbe.enabled`                             | Enable livenessProbe on Argo CD applicationSet controller nodes                                                 | `true`          |
+| `applicationSet.livenessProbe.initialDelaySeconds`                 | Initial delay seconds for livenessProbe                                                                         | `10`            |
+| `applicationSet.livenessProbe.periodSeconds`                       | Period seconds for livenessProbe                                                                                | `10`            |
+| `applicationSet.livenessProbe.timeoutSeconds`                      | Timeout seconds for livenessProbe                                                                               | `1`             |
+| `applicationSet.livenessProbe.failureThreshold`                    | Failure threshold for livenessProbe                                                                             | `3`             |
+| `applicationSet.livenessProbe.successThreshold`                    | Success threshold for livenessProbe                                                                             | `1`             |
+| `applicationSet.readinessProbe.enabled`                            | Enable readinessProbe on Argo CD applicationSet controller nodes                                                | `true`          |
+| `applicationSet.readinessProbe.initialDelaySeconds`                | Initial delay seconds for readinessProbe                                                                        | `10`            |
+| `applicationSet.readinessProbe.periodSeconds`                      | Period seconds for readinessProbe                                                                               | `10`            |
+| `applicationSet.readinessProbe.timeoutSeconds`                     | Timeout seconds for readinessProbe                                                                              | `1`             |
+| `applicationSet.readinessProbe.failureThreshold`                   | Failure threshold for readinessProbe                                                                            | `3`             |
+| `applicationSet.readinessProbe.successThreshold`                   | Success threshold for readinessProbe                                                                            | `1`             |
+| `applicationSet.customLivenessProbe`                               | Custom livenessProbe that overrides the default one                                                             | `{}`            |
+| `applicationSet.customReadinessProbe`                              | Custom readinessProbe that overrides the default one                                                            | `{}`            |
+| `applicationSet.resources.limits`                                  | The resources limits for the Argo CD applicationSet controller containers                                       | `{}`            |
+| `applicationSet.resources.requests`                                | The requested resources for the Argo CD applicationSet controller containers                                    | `{}`            |
+| `applicationSet.podSecurityContext.enabled`                        | Enabled Argo CD applicationSet controller pods' Security Context                                                | `true`          |
+| `applicationSet.podSecurityContext.fsGroup`                        | Set Argo CD applicationSet controller pod's Security Context fsGroup                                            | `1001`          |
+| `applicationSet.nodeSelector`                                      | Node labels for Argo CD applicationSet controller pods assignment                                               | `{}`            |
+| `applicationSet.tolerations`                                       | Tolerations for Argo CD applicationSet controller pods assignment                                               | `[]`            |
+| `applicationSet.updateStrategy.type`                               | Argo CD applicationSet controller statefulset strategy type                                                     | `RollingUpdate` |
+| `applicationSet.priorityClassName`                                 | Argo CD applicationSet controller pods' priorityClassName                                                       | `""`            |
+| `applicationSet.extraVolumes`                                      | Optionally specify extra list of additional volumes for the Argo CD applicationSet controller pod(s)            | `[]`            |
+| `applicationSet.extraVolumeMounts`                                 | Optionally specify extra list of additional volumeMounts for the Argo CD applicationSet controller container(s) | `[]`            |
+| `applicationSet.extraEnvVars`                                      | Array with extra environment variables to add to Argo CD applicationSet controller nodes                        | `[]`            |
+| `applicationSet.extraEnvVarsCM`                                    | Name of existing ConfigMap containing extra env vars for Argo CD applicationSet controller nodes                | `""`            |
+| `applicationSet.extraEnvVarsSecret`                                | Name of existing Secret containing extra env vars for Argo CD applicationSet controller nodes                   | `""`            |
+| `applicationSet.webhook.ingress.enabled`                           | Enable an ingress resource for Webhooks                                                                         | `false`         |
+| `applicationSet.webhook.ingress.annotations`                       | Additional ingress annotations                                                                                  | `{}`            |
+| `applicationSet.webhook.ingress.labels`                            | Additional ingress labels                                                                                       | `{}`            |
+| `applicationSet.webhook.ingress.ingressClassName`                  | Defines which ingress controller will implement the resource                                                    | `""`            |
+| `applicationSet.webhook.ingress.hostname`                          | Ingress hostname for the Argo CD applicationSet ingress                                                         | `""`            |
+| `applicationSet.webhook.ingress.path`                              | Argo CD applicationSet ingress path                                                                             | `/api/webhook`  |
+| `applicationSet.webhook.ingress.pathType`                          | Ingress path type. One of `Exact`, `Prefix` or `ImplementationSpecific`                                         | `Prefix`        |
+| `applicationSet.webhook.ingress.extraHosts`                        | Extra hosts array for the Argo CD applicationSet ingress                                                        | `[]`            |
+| `applicationSet.webhook.ingress.extraPaths`                        | Extra paths for the Argo CD applicationSet ingress                                                              | `[]`            |
+| `applicationSet.webhook.ingress.extraTls`                          | Extra TLS configuration for the Argo CD applicationSet ingress                                                  | `[]`            |
+| `applicationSet.webhook.ingress.tls`                               | Ingress TLS configuration                                                                                       | `[]`            |
+
+### Argo CD notifications controller parameters
+
+| Name                                                                         | Description                                                                                                        | Value          |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | -------------- |
+| `notifications.enabled`                                                      | Enable notifications controller                                                                                    | `false`        |
+| `notifications.command`                                                      | Override default container command (useful when using custom images)                                               | `[]`           |
+| `notifications.args`                                                         | Override default container args (useful when using custom images).                                                 | `[]`           |
+| `notifications.extraArgs`                                                    | Add extra arguments to the default arguments for the Argo CD notifications controller                              | `[]`           |
+| `notifications.logFormat`                                                    | Format for the Argo CD notifications controller logs. Options: [text, json]                                        | `text`         |
+| `notifications.logLevel`                                                     | Log level for the Argo CD notifications controller                                                                 | `info`         |
+| `notifications.containerPorts.metrics`                                       | Argo CD notifications controller metrics port number                                                               | `8085`         |
+| `notifications.metrics.enabled`                                              | Enable Argo CD notifications controller metrics                                                                    | `false`        |
+| `notifications.metrics.service.type`                                         | Argo CD notifications controller service type                                                                      | `ClusterIP`    |
+| `notifications.metrics.service.port`                                         | Argo CD notifications controller metrics service port                                                              | `8085`         |
+| `notifications.metrics.service.nodePort`                                     | Node port for the notifications controller service                                                                 | `""`           |
+| `notifications.metrics.service.clusterIP`                                    | Argo CD notifications controller metrics service Cluster IP                                                        | `""`           |
+| `notifications.metrics.service.loadBalancerIP`                               | Argo CD notifications controller service Load Balancer IP                                                          | `""`           |
+| `notifications.metrics.service.loadBalancerSourceRanges`                     | Argo CD notifications controller service Load Balancer sources                                                     | `[]`           |
+| `notifications.metrics.service.externalTrafficPolicy`                        | Argo CD notifications controller service external traffic policy                                                   | `Cluster`      |
+| `notifications.metrics.service.annotations`                                  | Additional custom annotations for Argo CD notifications controller service                                         | `{}`           |
+| `notifications.metrics.service.sessionAffinity`                              | Session Affinity for Kubernetes service, can be "None" or "ClientIP"                                               | `None`         |
+| `notifications.metrics.service.sessionAffinityConfig`                        | Additional settings for the sessionAffinity                                                                        | `{}`           |
+| `notifications.metrics.serviceMonitor.enabled`                               | Create ServiceMonitor Resource for scraping metrics using PrometheusOperator                                       | `false`        |
+| `notifications.metrics.serviceMonitor.namespace`                             | Namespace which Prometheus is running in                                                                           | `""`           |
+| `notifications.metrics.serviceMonitor.jobLabel`                              | The name of the label on the target service to use as the job name in prometheus.                                  | `""`           |
+| `notifications.metrics.serviceMonitor.interval`                              | Interval at which metrics should be scraped                                                                        | `30s`          |
+| `notifications.metrics.serviceMonitor.scrapeTimeout`                         | Timeout after which the scrape is ended                                                                            | `10s`          |
+| `notifications.metrics.serviceMonitor.relabelings`                           | RelabelConfigs to apply to samples before scraping                                                                 | `[]`           |
+| `notifications.metrics.serviceMonitor.metricRelabelings`                     | MetricRelabelConfigs to apply to samples before ingestion                                                          | `[]`           |
+| `notifications.metrics.serviceMonitor.selector`                              | ServiceMonitor selector labels                                                                                     | `{}`           |
+| `notifications.metrics.serviceMonitor.honorLabels`                           | honorLabels chooses the metric's labels on collisions with target labels                                           | `false`        |
+| `notifications.service.type`                                                 | Argo CD notifications controller service type                                                                      | `ClusterIP`    |
+| `notifications.service.port`                                                 | Argo CD notifications controller service port                                                                      | `7000`         |
+| `notifications.service.nodePort`                                             | Node port for Argo CD notifications controller service                                                             | `""`           |
+| `notifications.service.clusterIP`                                            | Argo CD notifications controller service Cluster IP                                                                | `""`           |
+| `notifications.service.loadBalancerIP`                                       | Argo CD notifications controller service Load Balancer IP                                                          | `""`           |
+| `notifications.service.loadBalancerSourceRanges`                             | Argo CD notifications controller service Load Balancer sources                                                     | `[]`           |
+| `notifications.service.externalTrafficPolicy`                                | Argo CD notifications controller service external traffic policy                                                   | `Cluster`      |
+| `notifications.service.annotations`                                          | Additional custom annotations for Argo CD notifications controller service                                         | `{}`           |
+| `notifications.service.extraPorts`                                           | Extra ports to expose (normally used with the `sidecar` value)                                                     | `[]`           |
+| `notifications.service.sessionAffinity`                                      | Session Affinity for Kubernetes service, can be "None" or "ClientIP"                                               | `None`         |
+| `notifications.service.sessionAffinityConfig`                                | Additional settings for the sessionAffinity                                                                        | `{}`           |
+| `notifications.serviceAccount.create`                                        | Specifies whether a ServiceAccount should be created                                                               | `true`         |
+| `notifications.serviceAccount.name`                                          | The name of the ServiceAccount to use.                                                                             | `""`           |
+| `notifications.serviceAccount.automountServiceAccountToken`                  | Automount service account token for the notifications controller service account                                   | `true`         |
+| `notifications.serviceAccount.annotations`                                   | Annotations for service account. Evaluated as a template. Only used if `create` is `true`.                         | `{}`           |
+| `notifications.podAffinityPreset`                                            | Pod affinity preset. Ignored if `notifications.affinity` is set. Allowed values: `soft` or `hard`                  | `""`           |
+| `notifications.podAntiAffinityPreset`                                        | Pod anti-affinity preset. Ignored if `notifications.affinity` is set. Allowed values: `soft` or `hard`             | `soft`         |
+| `notifications.nodeAffinityPreset.type`                                      | Node affinity preset type. Ignored if `notifications.affinity` is set. Allowed values: `soft` or `hard`            | `""`           |
+| `notifications.nodeAffinityPreset.key`                                       | Node label key to match. Ignored if `notifications.affinity` is set                                                | `""`           |
+| `notifications.nodeAffinityPreset.values`                                    | Node label values to match. Ignored if `notifications.affinity` is set                                             | `[]`           |
+| `notifications.affinity`                                                     | Affinity for Argo CD notifications controller pods assignment                                                      | `{}`           |
+| `notifications.podAnnotations`                                               | Annotations for Argo CD notifications controller pods                                                              | `{}`           |
+| `notifications.podLabels`                                                    | Extra labels for Argo CD notifications controller pods                                                             | `{}`           |
+| `notifications.containerSecurityContext.enabled`                             | Enabled Argo CD notifications controller containers' Security Context                                              | `true`         |
+| `notifications.containerSecurityContext.runAsUser`                           | Set Argo CD notifications controller containers' Security Context runAsUser                                        | `1001`         |
+| `notifications.containerSecurityContext.allowPrivilegeEscalation`            | Set Argo CD notifications controller containers' Security Context allowPrivilegeEscalation                         | `false`        |
+| `notifications.containerSecurityContext.capabilities.drop`                   | Set Argo CD notifications controller containers' Security Context capabilities to be dropped                       | `["all"]`      |
+| `notifications.containerSecurityContext.readOnlyRootFilesystem`              | Set Argo CD notifications controller containers' Security Context readOnlyRootFilesystem                           | `false`        |
+| `notifications.containerSecurityContext.runAsNonRoot`                        | Set Argo CD notifications controller container's Security Context runAsNonRoot                                     | `true`         |
+| `notifications.resources.limits`                                             | The resources limits for the Argo CD notifications controller containers                                           | `{}`           |
+| `notifications.resources.requests`                                           | The requested resources for the Argo CD notifications controller containers                                        | `{}`           |
+| `notifications.podSecurityContext.enabled`                                   | Enabled Argo CD notifications controller pods' Security Context                                                    | `true`         |
+| `notifications.podSecurityContext.fsGroup`                                   | Set Argo CD notifications controller pod's Security Context fsGroup                                                | `1001`         |
+| `notifications.nodeSelector`                                                 | Node labels for Argo CD notifications controller pods assignment                                                   | `{}`           |
+| `notifications.tolerations`                                                  | Tolerations for Argo CD notifications controller pods assignment                                                   | `[]`           |
+| `notifications.priorityClassName`                                            | Argo CD notifications controller pods' priorityClassName                                                           | `""`           |
+| `notifications.extraVolumes`                                                 | Optionally specify extra list of additional volumes for the Argo CD notifications controller pod(s)                | `[]`           |
+| `notifications.extraVolumeMounts`                                            | Optionally specify extra list of additional volumeMounts for the Argo CD notifications controller container(s)     | `[]`           |
+| `notifications.extraEnvVars`                                                 | Array with extra environment variables to add to Argo CD notifications controller nodes                            | `[]`           |
+| `notifications.extraEnvVarsCM`                                               | Name of existing ConfigMap containing extra env vars for Argo CD notifications controller nodes                    | `""`           |
+| `notifications.extraEnvVarsSecret`                                           | Name of existing Secret containing extra env vars for Argo CD notifications controller nodes                       | `""`           |
+| `notifications.webhook.ingress.enabled`                                      | Enable an ingress resource for Webhooks                                                                            | `false`        |
+| `notifications.webhook.ingress.annotations`                                  | Additional ingress annotations                                                                                     | `{}`           |
+| `notifications.webhook.ingress.labels`                                       | Additional ingress labels                                                                                          | `{}`           |
+| `notifications.webhook.ingress.ingressClassName`                             | Defines which ingress controller will implement the resource                                                       | `""`           |
+| `notifications.webhook.ingress.hostname`                                     | Ingress hostname for the Argo CD notifications ingress                                                             | `""`           |
+| `notifications.webhook.ingress.path`                                         | Argo CD notifications ingress path                                                                                 | `/api/webhook` |
+| `notifications.webhook.ingress.pathType`                                     | Ingress path type. One of `Exact`, `Prefix` or `ImplementationSpecific`                                            | `Prefix`       |
+| `notifications.webhook.ingress.extraHosts`                                   | Extra hosts array for the Argo CD notifications ingress                                                            | `[]`           |
+| `notifications.webhook.ingress.extraPaths`                                   | Extra paths for the Argo CD notifications ingress                                                                  | `[]`           |
+| `notifications.webhook.ingress.extraTls`                                     | Extra TLS configuration for the Argo CD notifications ingress                                                      | `[]`           |
+| `notifications.webhook.ingress.tls`                                          | Ingress TLS configuration                                                                                          | `[]`           |
+| `notifications.bots.slack.enabled`                                           | Enable notifications controller                                                                                    | `false`        |
+| `notifications.bots.slack.command`                                           | Override default container command (useful when using custom images)                                               | `[]`           |
+| `notifications.bots.slack.args`                                              | Override default container args (useful when using custom images).                                                 | `[]`           |
+| `notifications.bots.slack.extraArgs`                                         | Add extra arguments to the default arguments for the Argo CD Slack bot                                             | `[]`           |
+| `notifications.bots.slack.service.type`                                      | Argo CD Slack bot service type                                                                                     | `LoadBalancer` |
+| `notifications.bots.slack.service.port`                                      | Argo CD Slack bot service port                                                                                     | `80`           |
+| `notifications.bots.slack.service.nodePort`                                  | Node port for Argo CD Slack bot service                                                                            | `""`           |
+| `notifications.bots.slack.service.clusterIP`                                 | Argo CD Slack bot service Cluster IP                                                                               | `""`           |
+| `notifications.bots.slack.service.loadBalancerIP`                            | Argo CD Slack bot service Load Balancer IP                                                                         | `""`           |
+| `notifications.bots.slack.service.loadBalancerSourceRanges`                  | Argo CD Slack bot service Load Balancer sources                                                                    | `[]`           |
+| `notifications.bots.slack.service.externalTrafficPolicy`                     | Argo CD Slack bot service external traffic policy                                                                  | `Cluster`      |
+| `notifications.bots.slack.service.annotations`                               | Additional custom annotations for Argo CD Slack bot service                                                        | `{}`           |
+| `notifications.bots.slack.service.extraPorts`                                | Extra ports to expose (normally used with the `sidecar` value)                                                     | `[]`           |
+| `notifications.bots.slack.service.sessionAffinity`                           | Session Affinity for Kubernetes service, can be "None" or "ClientIP"                                               | `None`         |
+| `notifications.bots.slack.service.sessionAffinityConfig`                     | Additional settings for the sessionAffinity                                                                        | `{}`           |
+| `notifications.bots.slack.serviceAccount.create`                             | Specifies whether a ServiceAccount should be created                                                               | `true`         |
+| `notifications.bots.slack.serviceAccount.name`                               | The name of the ServiceAccount to use.                                                                             | `""`           |
+| `notifications.bots.slack.serviceAccount.automountServiceAccountToken`       | Automount service account token for the notifications controller service account                                   | `true`         |
+| `notifications.bots.slack.serviceAccount.annotations`                        | Annotations for service account. Evaluated as a template. Only used if `create` is `true`.                         | `{}`           |
+| `notifications.bots.slack.podAffinityPreset`                                 | Pod affinity preset. Ignored if `notifications.bots.slack.affinity` is set. Allowed values: `soft` or `hard`       | `""`           |
+| `notifications.bots.slack.podAntiAffinityPreset`                             | Pod anti-affinity preset. Ignored if `notifications.bots.slack.affinity` is set. Allowed values: `soft` or `hard`  | `soft`         |
+| `notifications.bots.slack.nodeAffinityPreset.type`                           | Node affinity preset type. Ignored if `notifications.bots.slack.affinity` is set. Allowed values: `soft` or `hard` | `""`           |
+| `notifications.bots.slack.nodeAffinityPreset.key`                            | Node label key to match. Ignored if `notifications.bots.slack.affinity` is set                                     | `""`           |
+| `notifications.bots.slack.nodeAffinityPreset.values`                         | Node label values to match. Ignored if `notifications.bots.slack.affinity` is set                                  | `[]`           |
+| `notifications.bots.slack.affinity`                                          | Affinity for Argo CD Slack bot pods assignment                                                                     | `{}`           |
+| `notifications.bots.slack.podAnnotations`                                    | Annotations for Argo CD Slack bot pods                                                                             | `{}`           |
+| `notifications.bots.slack.podLabels`                                         | Extra labels for Argo CD Slack bot pods                                                                            | `{}`           |
+| `notifications.bots.slack.containerSecurityContext.enabled`                  | Enabled Argo CD Slack bot containers' Security Context                                                             | `true`         |
+| `notifications.bots.slack.containerSecurityContext.runAsUser`                | Set Argo CD Slack bot containers' Security Context runAsUser                                                       | `1001`         |
+| `notifications.bots.slack.containerSecurityContext.allowPrivilegeEscalation` | Set Argo CD Slack bot containers' Security Context allowPrivilegeEscalation                                        | `false`        |
+| `notifications.bots.slack.containerSecurityContext.capabilities.drop`        | Set Argo CD Slack bot containers' Security Context capabilities to be dropped                                      | `["all"]`      |
+| `notifications.bots.slack.containerSecurityContext.readOnlyRootFilesystem`   | Set Argo CD Slack bot containers' Security Context readOnlyRootFilesystem                                          | `false`        |
+| `notifications.bots.slack.containerSecurityContext.runAsNonRoot`             | Set Argo CD Slack bot container's Security Context runAsNonRoot                                                    | `true`         |
+| `notifications.bots.slack.resources.limits`                                  | The resources limits for the Argo CD Slack bot containers                                                          | `{}`           |
+| `notifications.bots.slack.resources.requests`                                | The requested resources for the Argo CD Slack bot containers                                                       | `{}`           |
+| `notifications.bots.slack.podSecurityContext.enabled`                        | Enabled Argo CD Slack bot pods' Security Context                                                                   | `true`         |
+| `notifications.bots.slack.podSecurityContext.fsGroup`                        | Set Argo CD Slack bot pod's Security Context fsGroup                                                               | `1001`         |
+| `notifications.bots.slack.nodeSelector`                                      | Node labels for Argo CD Slack bot pods assignment                                                                  | `{}`           |
+| `notifications.bots.slack.tolerations`                                       | Tolerations for Argo CD Slack bot pods assignment                                                                  | `[]`           |
+| `notifications.bots.slack.priorityClassName`                                 | Argo CD Slack bot pods' priorityClassName                                                                          | `""`           |
+| `notifications.bots.slack.extraVolumes`                                      | Optionally specify extra list of additional volumes for the Argo CD Slack bot pod(s)                               | `[]`           |
+| `notifications.bots.slack.extraVolumeMounts`                                 | Optionally specify extra list of additional volumeMounts for the Argo CD Slack bot container(s)                    | `[]`           |
+| `notifications.bots.slack.extraEnvVars`                                      | Array with extra environment variables to add to Argo CD Slack bot nodes                                           | `[]`           |
+| `notifications.bots.slack.extraEnvVarsCM`                                    | Name of existing ConfigMap containing extra env vars for Argo CD Slack bot nodes                                   | `""`           |
+| `notifications.bots.slack.extraEnvVarsSecret`                                | Name of existing Secret containing extra env vars for Argo CD Slack bot nodes                                      | `""`           |
 
 ### Argo CD server Parameters
 
@@ -327,6 +560,7 @@ The command removes all the Kubernetes components associated with the chart and 
 | `server.nodeSelector`                                      | Node labels for Argo CD server pods assignment                                                                                  | `{}`                     |
 | `server.tolerations`                                       | Tolerations for Argo CD server pods assignment                                                                                  | `[]`                     |
 | `server.schedulerName`                                     | Name of the k8s scheduler (other than default)                                                                                  | `""`                     |
+| `server.shareProcessNamespace`                             | Enable shared process namespace in a pod.                                                                                       | `false`                  |
 | `server.topologySpreadConstraints`                         | Topology Spread Constraints for pod assignment                                                                                  | `[]`                     |
 | `server.updateStrategy.type`                               | Argo CD server statefulset strategy type                                                                                        | `RollingUpdate`          |
 | `server.priorityClassName`                                 | Argo CD server pods' priorityClassName                                                                                          | `""`                     |
@@ -343,7 +577,6 @@ The command removes all the Kubernetes components associated with the chart and 
 | `server.serviceAccount.name`                               | The name of the ServiceAccount to use.                                                                                          | `""`                     |
 | `server.serviceAccount.automountServiceAccountToken`       | Automount service account token for the server service account                                                                  | `true`                   |
 | `server.serviceAccount.annotations`                        | Annotations for service account. Evaluated as a template. Only used if `create` is `true`.                                      | `{}`                     |
-
 
 ### Argo CD repo server Parameters
 
@@ -440,6 +673,7 @@ The command removes all the Kubernetes components associated with the chart and 
 | `repoServer.nodeSelector`                                      | Node labels for Argo CD repo server pods assignment                                                  | `{}`            |
 | `repoServer.tolerations`                                       | Tolerations for Argo CD repo server pods assignment                                                  | `[]`            |
 | `repoServer.schedulerName`                                     | Name of the k8s scheduler (other than default)                                                       | `""`            |
+| `repoServer.shareProcessNamespace`                             | Enable shared process namespace in a pod.                                                            | `false`         |
 | `repoServer.topologySpreadConstraints`                         | Topology Spread Constraints for pod assignment                                                       | `[]`            |
 | `repoServer.updateStrategy.type`                               | Argo CD repo server statefulset strategy type                                                        | `RollingUpdate` |
 | `repoServer.priorityClassName`                                 | Argo CD repo server pods' priorityClassName                                                          | `""`            |
@@ -453,117 +687,117 @@ The command removes all the Kubernetes components associated with the chart and 
 | `repoServer.sidecars`                                          | Add additional sidecar containers to the Argo CD repo server pod(s)                                  | `[]`            |
 | `repoServer.initContainers`                                    | Add additional init containers to the Argo CD repo server pod(s)                                     | `[]`            |
 
-
 ### Dex Parameters
 
-| Name                                                    | Description                                                                                   | Value                 |
-| ------------------------------------------------------- | --------------------------------------------------------------------------------------------- | --------------------- |
-| `dex.image.registry`                                    | Dex image registry                                                                            | `docker.io`           |
-| `dex.image.repository`                                  | Dex image repository                                                                          | `bitnami/dex`         |
-| `dex.image.tag`                                         | Dex image tag (immutable tags are recommended)                                                | `2.31.2-debian-11-r0` |
-| `dex.image.pullPolicy`                                  | Dex image pull policy                                                                         | `IfNotPresent`        |
-| `dex.image.pullSecrets`                                 | Dex image pull secrets                                                                        | `[]`                  |
-| `dex.image.debug`                                       | Enable Dex image debug mode                                                                   | `false`               |
-| `dex.enabled`                                           | Enable the creation of a Dex deployment for SSO                                               | `false`               |
-| `dex.replicaCount`                                      | Number of Dex replicas to deploy                                                              | `1`                   |
-| `dex.startupProbe.enabled`                              | Enable startupProbe on Dex nodes                                                              | `false`               |
-| `dex.startupProbe.initialDelaySeconds`                  | Initial delay seconds for startupProbe                                                        | `10`                  |
-| `dex.startupProbe.periodSeconds`                        | Period seconds for startupProbe                                                               | `10`                  |
-| `dex.startupProbe.timeoutSeconds`                       | Timeout seconds for startupProbe                                                              | `1`                   |
-| `dex.startupProbe.failureThreshold`                     | Failure threshold for startupProbe                                                            | `3`                   |
-| `dex.startupProbe.successThreshold`                     | Success threshold for startupProbe                                                            | `1`                   |
-| `dex.livenessProbe.enabled`                             | Enable livenessProbe on Dex nodes                                                             | `true`                |
-| `dex.livenessProbe.initialDelaySeconds`                 | Initial delay seconds for livenessProbe                                                       | `10`                  |
-| `dex.livenessProbe.periodSeconds`                       | Period seconds for livenessProbe                                                              | `10`                  |
-| `dex.livenessProbe.timeoutSeconds`                      | Timeout seconds for livenessProbe                                                             | `1`                   |
-| `dex.livenessProbe.failureThreshold`                    | Failure threshold for livenessProbe                                                           | `3`                   |
-| `dex.livenessProbe.successThreshold`                    | Success threshold for livenessProbe                                                           | `1`                   |
-| `dex.readinessProbe.enabled`                            | Enable readinessProbe on Dex nodes                                                            | `true`                |
-| `dex.readinessProbe.initialDelaySeconds`                | Initial delay seconds for readinessProbe                                                      | `10`                  |
-| `dex.readinessProbe.periodSeconds`                      | Period seconds for readinessProbe                                                             | `10`                  |
-| `dex.readinessProbe.timeoutSeconds`                     | Timeout seconds for readinessProbe                                                            | `1`                   |
-| `dex.readinessProbe.failureThreshold`                   | Failure threshold for readinessProbe                                                          | `3`                   |
-| `dex.readinessProbe.successThreshold`                   | Success threshold for readinessProbe                                                          | `1`                   |
-| `dex.customStartupProbe`                                | Custom startupProbe that overrides the default one                                            | `{}`                  |
-| `dex.customLivenessProbe`                               | Custom livenessProbe that overrides the default one                                           | `{}`                  |
-| `dex.customReadinessProbe`                              | Custom readinessProbe that overrides the default one                                          | `{}`                  |
-| `dex.resources.limits`                                  | The resources limits for the Dex containers                                                   | `{}`                  |
-| `dex.resources.requests`                                | The requested resources for the Dex containers                                                | `{}`                  |
-| `dex.podSecurityContext.enabled`                        | Enabled Dex pods' Security Context                                                            | `true`                |
-| `dex.podSecurityContext.fsGroup`                        | Set Dex pod's Security Context fsGroup                                                        | `1001`                |
-| `dex.containerSecurityContext.enabled`                  | Enabled Dex containers' Security Context                                                      | `true`                |
-| `dex.containerSecurityContext.runAsUser`                | Set Dex containers' Security Context runAsUser                                                | `1001`                |
-| `dex.containerSecurityContext.allowPrivilegeEscalation` | Set Dex containers' Security Context allowPrivilegeEscalation                                 | `false`               |
-| `dex.containerSecurityContext.readOnlyRootFilesystem`   | Set Dex containers' server Security Context readOnlyRootFilesystem                            | `false`               |
-| `dex.containerSecurityContext.runAsNonRoot`             | Set Dex containers' Security Context runAsNonRoot                                             | `true`                |
-| `dex.service.type`                                      | Dex service type                                                                              | `ClusterIP`           |
-| `dex.service.ports.http`                                | Dex HTTP service port                                                                         | `5556`                |
-| `dex.service.ports.grpc`                                | Dex grpc service port                                                                         | `5557`                |
-| `dex.service.nodePorts.http`                            | HTTP node port for the Dex service                                                            | `""`                  |
-| `dex.service.nodePorts.grpc`                            | gRPC node port for the Dex service                                                            | `""`                  |
-| `dex.service.clusterIP`                                 | Dex service Cluster IP                                                                        | `""`                  |
-| `dex.service.loadBalancerIP`                            | Dex service Load Balancer IP                                                                  | `""`                  |
-| `dex.service.loadBalancerSourceRanges`                  | Dex service Load Balancer sources                                                             | `[]`                  |
-| `dex.service.externalTrafficPolicy`                     | Dex service external traffic policy                                                           | `Cluster`             |
-| `dex.service.annotations`                               | Additional custom annotations for Dex service                                                 | `{}`                  |
-| `dex.service.extraPorts`                                | Extra ports to expose (normally used with the `sidecar` value)                                | `[]`                  |
-| `dex.service.sessionAffinity`                           | Session Affinity for Kubernetes service, can be "None" or "ClientIP"                          | `None`                |
-| `dex.service.sessionAffinityConfig`                     | Additional settings for the sessionAffinity                                                   | `{}`                  |
-| `dex.containerPorts.http`                               | Dex container HTTP port                                                                       | `5556`                |
-| `dex.containerPorts.grpc`                               | Dex gRPC port                                                                                 | `5557`                |
-| `dex.containerPorts.metrics`                            | Dex metrics port                                                                              | `5558`                |
-| `dex.metrics.enabled`                                   | Enable metrics for Dex                                                                        | `false`               |
-| `dex.metrics.service.type`                              | Dex service type                                                                              | `ClusterIP`           |
-| `dex.metrics.service.port`                              | Dex metrics service port                                                                      | `5558`                |
-| `dex.metrics.service.nodePort`                          | Node port for the Dex service                                                                 | `""`                  |
-| `dex.metrics.service.clusterIP`                         | Dex service metrics service Cluster IP                                                        | `""`                  |
-| `dex.metrics.service.loadBalancerIP`                    | Dex service Load Balancer IP                                                                  | `""`                  |
-| `dex.metrics.service.loadBalancerSourceRanges`          | Dex service Load Balancer sources                                                             | `[]`                  |
-| `dex.metrics.service.externalTrafficPolicy`             | Dex service external traffic policy                                                           | `Cluster`             |
-| `dex.metrics.service.annotations`                       | Additional custom annotations for Dex service                                                 | `{}`                  |
-| `dex.metrics.service.sessionAffinity`                   | Session Affinity for Kubernetes service, can be "None" or "ClientIP"                          | `None`                |
-| `dex.metrics.service.sessionAffinityConfig`             | Additional settings for the sessionAffinity                                                   | `{}`                  |
-| `dex.metrics.serviceMonitor.enabled`                    | Create ServiceMonitor Resource for scraping metrics using PrometheusOperator                  | `false`               |
-| `dex.metrics.serviceMonitor.namespace`                  | Namespace which Prometheus is running in                                                      | `""`                  |
-| `dex.metrics.serviceMonitor.jobLabel`                   | The name of the label on the target service to use as the job name in prometheus.             | `""`                  |
-| `dex.metrics.serviceMonitor.interval`                   | Interval at which metrics should be scraped                                                   | `30s`                 |
-| `dex.metrics.serviceMonitor.scrapeTimeout`              | Timeout after which the scrape is ended                                                       | `10s`                 |
-| `dex.metrics.serviceMonitor.relabelings`                | RelabelConfigs to apply to samples before scraping                                            | `[]`                  |
-| `dex.metrics.serviceMonitor.metricRelabelings`          | MetricRelabelConfigs to apply to samples before ingestion                                     | `[]`                  |
-| `dex.metrics.serviceMonitor.selector`                   | ServiceMonitor selector labels                                                                | `{}`                  |
-| `dex.metrics.serviceMonitor.honorLabels`                | honorLabels chooses the metric's labels on collisions with target labels                      | `false`               |
-| `dex.serviceAccount.create`                             | Specifies whether a ServiceAccount should be created for Dex                                  | `true`                |
-| `dex.serviceAccount.name`                               | The name of the ServiceAccount to use.                                                        | `""`                  |
-| `dex.serviceAccount.automountServiceAccountToken`       | Automount service account token for the Dex service account                                   | `true`                |
-| `dex.serviceAccount.annotations`                        | Annotations for service account. Evaluated as a template. Only used if `create` is `true`.    | `{}`                  |
-| `dex.command`                                           | Override default container command (useful when using custom images)                          | `[]`                  |
-| `dex.args`                                              | Override default container args (useful when using custom images)                             | `[]`                  |
-| `dex.extraArgs`                                         | Add extra args to the default args for Dex                                                    | `[]`                  |
-| `dex.hostAliases`                                       | Dex pods host aliases                                                                         | `[]`                  |
-| `dex.podLabels`                                         | Extra labels for Dex pods                                                                     | `{}`                  |
-| `dex.podAnnotations`                                    | Annotations for Dex pods                                                                      | `{}`                  |
-| `dex.podAffinityPreset`                                 | Pod affinity preset. Ignored if `dex.affinity` is set. Allowed values: `soft` or `hard`       | `""`                  |
-| `dex.podAntiAffinityPreset`                             | Pod anti-affinity preset. Ignored if `dex.affinity` is set. Allowed values: `soft` or `hard`  | `soft`                |
-| `dex.nodeAffinityPreset.type`                           | Node affinity preset type. Ignored if `dex.affinity` is set. Allowed values: `soft` or `hard` | `""`                  |
-| `dex.nodeAffinityPreset.key`                            | Node label key to match. Ignored if `dex.affinity` is set                                     | `""`                  |
-| `dex.nodeAffinityPreset.values`                         | Node label values to match. Ignored if `dex.affinity` is set                                  | `[]`                  |
-| `dex.affinity`                                          | Affinity for Dex pods assignment                                                              | `{}`                  |
-| `dex.nodeSelector`                                      | Node labels for Dex pods assignment                                                           | `{}`                  |
-| `dex.tolerations`                                       | Tolerations for Dex pods assignment                                                           | `[]`                  |
-| `dex.schedulerName`                                     | Name of the k8s scheduler (other than default)                                                | `""`                  |
-| `dex.topologySpreadConstraints`                         | Topology Spread Constraints for pod assignment                                                | `[]`                  |
-| `dex.updateStrategy.type`                               | Dex statefulset strategy type                                                                 | `RollingUpdate`       |
-| `dex.priorityClassName`                                 | Dex pods' priorityClassName                                                                   | `""`                  |
-| `dex.runtimeClassName`                                  | Name of the runtime class to be used by pod(s)                                                | `""`                  |
-| `dex.lifecycleHooks`                                    | for the Dex container(s) to automate configuration before or after startup                    | `{}`                  |
-| `dex.extraEnvVars`                                      | Array with extra environment variables to add to Dex nodes                                    | `[]`                  |
-| `dex.extraEnvVarsCM`                                    | Name of existing ConfigMap containing extra env vars for Dex nodes                            | `""`                  |
-| `dex.extraEnvVarsSecret`                                | Name of existing Secret containing extra env vars for Dex nodes                               | `""`                  |
-| `dex.extraVolumes`                                      | Optionally specify extra list of additional volumes for the Dex pod(s)                        | `[]`                  |
-| `dex.extraVolumeMounts`                                 | Optionally specify extra list of additional volumeMounts for the Dex container(s)             | `[]`                  |
-| `dex.sidecars`                                          | Add additional sidecar containers to the Dex pod(s)                                           | `[]`                  |
-| `dex.initContainers`                                    | Add additional init containers to the Dex pod(s)                                              | `[]`                  |
-
+| Name                                                    | Description                                                                                         | Value                  |
+| ------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ---------------------- |
+| `dex.image.registry`                                    | Dex image registry                                                                                  | `docker.io`            |
+| `dex.image.repository`                                  | Dex image repository                                                                                | `bitnami/dex`          |
+| `dex.image.tag`                                         | Dex image tag (immutable tags are recommended)                                                      | `2.37.0-debian-11-r36` |
+| `dex.image.digest`                                      | Dex image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag | `""`                   |
+| `dex.image.pullPolicy`                                  | Dex image pull policy                                                                               | `IfNotPresent`         |
+| `dex.image.pullSecrets`                                 | Dex image pull secrets                                                                              | `[]`                   |
+| `dex.image.debug`                                       | Enable Dex image debug mode                                                                         | `false`                |
+| `dex.enabled`                                           | Enable the creation of a Dex deployment for SSO                                                     | `false`                |
+| `dex.replicaCount`                                      | Number of Dex replicas to deploy                                                                    | `1`                    |
+| `dex.startupProbe.enabled`                              | Enable startupProbe on Dex nodes                                                                    | `false`                |
+| `dex.startupProbe.initialDelaySeconds`                  | Initial delay seconds for startupProbe                                                              | `10`                   |
+| `dex.startupProbe.periodSeconds`                        | Period seconds for startupProbe                                                                     | `10`                   |
+| `dex.startupProbe.timeoutSeconds`                       | Timeout seconds for startupProbe                                                                    | `1`                    |
+| `dex.startupProbe.failureThreshold`                     | Failure threshold for startupProbe                                                                  | `3`                    |
+| `dex.startupProbe.successThreshold`                     | Success threshold for startupProbe                                                                  | `1`                    |
+| `dex.livenessProbe.enabled`                             | Enable livenessProbe on Dex nodes                                                                   | `true`                 |
+| `dex.livenessProbe.initialDelaySeconds`                 | Initial delay seconds for livenessProbe                                                             | `10`                   |
+| `dex.livenessProbe.periodSeconds`                       | Period seconds for livenessProbe                                                                    | `10`                   |
+| `dex.livenessProbe.timeoutSeconds`                      | Timeout seconds for livenessProbe                                                                   | `1`                    |
+| `dex.livenessProbe.failureThreshold`                    | Failure threshold for livenessProbe                                                                 | `3`                    |
+| `dex.livenessProbe.successThreshold`                    | Success threshold for livenessProbe                                                                 | `1`                    |
+| `dex.readinessProbe.enabled`                            | Enable readinessProbe on Dex nodes                                                                  | `true`                 |
+| `dex.readinessProbe.initialDelaySeconds`                | Initial delay seconds for readinessProbe                                                            | `10`                   |
+| `dex.readinessProbe.periodSeconds`                      | Period seconds for readinessProbe                                                                   | `10`                   |
+| `dex.readinessProbe.timeoutSeconds`                     | Timeout seconds for readinessProbe                                                                  | `1`                    |
+| `dex.readinessProbe.failureThreshold`                   | Failure threshold for readinessProbe                                                                | `3`                    |
+| `dex.readinessProbe.successThreshold`                   | Success threshold for readinessProbe                                                                | `1`                    |
+| `dex.customStartupProbe`                                | Custom startupProbe that overrides the default one                                                  | `{}`                   |
+| `dex.customLivenessProbe`                               | Custom livenessProbe that overrides the default one                                                 | `{}`                   |
+| `dex.customReadinessProbe`                              | Custom readinessProbe that overrides the default one                                                | `{}`                   |
+| `dex.resources.limits`                                  | The resources limits for the Dex containers                                                         | `{}`                   |
+| `dex.resources.requests`                                | The requested resources for the Dex containers                                                      | `{}`                   |
+| `dex.podSecurityContext.enabled`                        | Enabled Dex pods' Security Context                                                                  | `true`                 |
+| `dex.podSecurityContext.fsGroup`                        | Set Dex pod's Security Context fsGroup                                                              | `1001`                 |
+| `dex.containerSecurityContext.enabled`                  | Enabled Dex containers' Security Context                                                            | `true`                 |
+| `dex.containerSecurityContext.runAsUser`                | Set Dex containers' Security Context runAsUser                                                      | `1001`                 |
+| `dex.containerSecurityContext.allowPrivilegeEscalation` | Set Dex containers' Security Context allowPrivilegeEscalation                                       | `false`                |
+| `dex.containerSecurityContext.readOnlyRootFilesystem`   | Set Dex containers' server Security Context readOnlyRootFilesystem                                  | `false`                |
+| `dex.containerSecurityContext.runAsNonRoot`             | Set Dex containers' Security Context runAsNonRoot                                                   | `true`                 |
+| `dex.service.type`                                      | Dex service type                                                                                    | `ClusterIP`            |
+| `dex.service.ports.http`                                | Dex HTTP service port                                                                               | `5556`                 |
+| `dex.service.ports.grpc`                                | Dex grpc service port                                                                               | `5557`                 |
+| `dex.service.nodePorts.http`                            | HTTP node port for the Dex service                                                                  | `""`                   |
+| `dex.service.nodePorts.grpc`                            | gRPC node port for the Dex service                                                                  | `""`                   |
+| `dex.service.clusterIP`                                 | Dex service Cluster IP                                                                              | `""`                   |
+| `dex.service.loadBalancerIP`                            | Dex service Load Balancer IP                                                                        | `""`                   |
+| `dex.service.loadBalancerSourceRanges`                  | Dex service Load Balancer sources                                                                   | `[]`                   |
+| `dex.service.externalTrafficPolicy`                     | Dex service external traffic policy                                                                 | `Cluster`              |
+| `dex.service.annotations`                               | Additional custom annotations for Dex service                                                       | `{}`                   |
+| `dex.service.extraPorts`                                | Extra ports to expose (normally used with the `sidecar` value)                                      | `[]`                   |
+| `dex.service.sessionAffinity`                           | Session Affinity for Kubernetes service, can be "None" or "ClientIP"                                | `None`                 |
+| `dex.service.sessionAffinityConfig`                     | Additional settings for the sessionAffinity                                                         | `{}`                   |
+| `dex.containerPorts.http`                               | Dex container HTTP port                                                                             | `5556`                 |
+| `dex.containerPorts.grpc`                               | Dex gRPC port                                                                                       | `5557`                 |
+| `dex.containerPorts.metrics`                            | Dex metrics port                                                                                    | `5558`                 |
+| `dex.metrics.enabled`                                   | Enable metrics service for Dex                                                                      | `false`                |
+| `dex.metrics.service.type`                              | Dex service type                                                                                    | `ClusterIP`            |
+| `dex.metrics.service.port`                              | Dex metrics service port                                                                            | `5558`                 |
+| `dex.metrics.service.nodePort`                          | Node port for the Dex service                                                                       | `""`                   |
+| `dex.metrics.service.clusterIP`                         | Dex service metrics service Cluster IP                                                              | `""`                   |
+| `dex.metrics.service.loadBalancerIP`                    | Dex service Load Balancer IP                                                                        | `""`                   |
+| `dex.metrics.service.loadBalancerSourceRanges`          | Dex service Load Balancer sources                                                                   | `[]`                   |
+| `dex.metrics.service.externalTrafficPolicy`             | Dex service external traffic policy                                                                 | `Cluster`              |
+| `dex.metrics.service.annotations`                       | Additional custom annotations for Dex service                                                       | `{}`                   |
+| `dex.metrics.service.sessionAffinity`                   | Session Affinity for Kubernetes service, can be "None" or "ClientIP"                                | `None`                 |
+| `dex.metrics.service.sessionAffinityConfig`             | Additional settings for the sessionAffinity                                                         | `{}`                   |
+| `dex.metrics.serviceMonitor.enabled`                    | Create ServiceMonitor Resource for scraping metrics using PrometheusOperator                        | `false`                |
+| `dex.metrics.serviceMonitor.namespace`                  | Namespace which Prometheus is running in                                                            | `""`                   |
+| `dex.metrics.serviceMonitor.jobLabel`                   | The name of the label on the target service to use as the job name in prometheus.                   | `""`                   |
+| `dex.metrics.serviceMonitor.interval`                   | Interval at which metrics should be scraped                                                         | `30s`                  |
+| `dex.metrics.serviceMonitor.scrapeTimeout`              | Timeout after which the scrape is ended                                                             | `10s`                  |
+| `dex.metrics.serviceMonitor.relabelings`                | RelabelConfigs to apply to samples before scraping                                                  | `[]`                   |
+| `dex.metrics.serviceMonitor.metricRelabelings`          | MetricRelabelConfigs to apply to samples before ingestion                                           | `[]`                   |
+| `dex.metrics.serviceMonitor.selector`                   | ServiceMonitor selector labels                                                                      | `{}`                   |
+| `dex.metrics.serviceMonitor.honorLabels`                | honorLabels chooses the metric's labels on collisions with target labels                            | `false`                |
+| `dex.serviceAccount.create`                             | Specifies whether a ServiceAccount should be created for Dex                                        | `true`                 |
+| `dex.serviceAccount.name`                               | The name of the ServiceAccount to use.                                                              | `""`                   |
+| `dex.serviceAccount.automountServiceAccountToken`       | Automount service account token for the Dex service account                                         | `true`                 |
+| `dex.serviceAccount.annotations`                        | Annotations for service account. Evaluated as a template. Only used if `create` is `true`.          | `{}`                   |
+| `dex.command`                                           | Override default container command (useful when using custom images)                                | `[]`                   |
+| `dex.args`                                              | Override default container args (useful when using custom images)                                   | `[]`                   |
+| `dex.extraArgs`                                         | Add extra args to the default args for Dex                                                          | `[]`                   |
+| `dex.hostAliases`                                       | Dex pods host aliases                                                                               | `[]`                   |
+| `dex.podLabels`                                         | Extra labels for Dex pods                                                                           | `{}`                   |
+| `dex.podAnnotations`                                    | Annotations for Dex pods                                                                            | `{}`                   |
+| `dex.podAffinityPreset`                                 | Pod affinity preset. Ignored if `dex.affinity` is set. Allowed values: `soft` or `hard`             | `""`                   |
+| `dex.podAntiAffinityPreset`                             | Pod anti-affinity preset. Ignored if `dex.affinity` is set. Allowed values: `soft` or `hard`        | `soft`                 |
+| `dex.nodeAffinityPreset.type`                           | Node affinity preset type. Ignored if `dex.affinity` is set. Allowed values: `soft` or `hard`       | `""`                   |
+| `dex.nodeAffinityPreset.key`                            | Node label key to match. Ignored if `dex.affinity` is set                                           | `""`                   |
+| `dex.nodeAffinityPreset.values`                         | Node label values to match. Ignored if `dex.affinity` is set                                        | `[]`                   |
+| `dex.affinity`                                          | Affinity for Dex pods assignment                                                                    | `{}`                   |
+| `dex.nodeSelector`                                      | Node labels for Dex pods assignment                                                                 | `{}`                   |
+| `dex.tolerations`                                       | Tolerations for Dex pods assignment                                                                 | `[]`                   |
+| `dex.schedulerName`                                     | Name of the k8s scheduler (other than default)                                                      | `""`                   |
+| `dex.shareProcessNamespace`                             | Enable shared process namespace in a pod.                                                           | `false`                |
+| `dex.topologySpreadConstraints`                         | Topology Spread Constraints for pod assignment                                                      | `[]`                   |
+| `dex.updateStrategy.type`                               | Dex statefulset strategy type                                                                       | `RollingUpdate`        |
+| `dex.priorityClassName`                                 | Dex pods' priorityClassName                                                                         | `""`                   |
+| `dex.runtimeClassName`                                  | Name of the runtime class to be used by pod(s)                                                      | `""`                   |
+| `dex.lifecycleHooks`                                    | for the Dex container(s) to automate configuration before or after startup                          | `{}`                   |
+| `dex.extraEnvVars`                                      | Array with extra environment variables to add to Dex nodes                                          | `[]`                   |
+| `dex.extraEnvVarsCM`                                    | Name of existing ConfigMap containing extra env vars for Dex nodes                                  | `""`                   |
+| `dex.extraEnvVarsSecret`                                | Name of existing Secret containing extra env vars for Dex nodes                                     | `""`                   |
+| `dex.extraVolumes`                                      | Optionally specify extra list of additional volumes for the Dex pod(s)                              | `[]`                   |
+| `dex.extraVolumeMounts`                                 | Optionally specify extra list of additional volumeMounts for the Dex container(s)                   | `[]`                   |
+| `dex.sidecars`                                          | Add additional sidecar containers to the Dex pod(s)                                                 | `[]`                   |
+| `dex.initContainers`                                    | Add additional init containers to the Dex pod(s)                                                    | `[]`                   |
 
 ### Shared config for Argo CD components
 
@@ -575,6 +809,7 @@ The command removes all the Kubernetes components associated with the chart and 
 | `config.styles`                                | Custom CSS styles                                                                                     | `""`   |
 | `config.existingStylesConfigmap`               | Use an existing styles configmap                                                                      | `""`   |
 | `config.tlsCerts`                              | TLS certificates used to verify the authenticity of the repository servers                            | `{}`   |
+| `config.gpgKeys`                               | GnuPG public keys to add to the keyring                                                               | `{}`   |
 | `config.secret.create`                         | Whether to create or not the secret                                                                   | `true` |
 | `config.secret.annotations`                    | General secret extra annotations                                                                      | `{}`   |
 | `config.secret.githubSecret`                   | GitHub secret to configure webhooks                                                                   | `""`   |
@@ -590,47 +825,49 @@ The command removes all the Kubernetes components associated with the chart and 
 | `config.secret.repositoryCredentials`          | Repository credentials to add to the Argo CD server confgi secret                                     | `{}`   |
 | `config.clusterCredentials`                    | Configure external cluster credentials                                                                | `[]`   |
 
-
 ### Init Container Parameters
 
-| Name                                                   | Description                                                                                     | Value                   |
-| ------------------------------------------------------ | ----------------------------------------------------------------------------------------------- | ----------------------- |
-| `volumePermissions.enabled`                            | Enable init container that changes the owner/group of the PV mount point to `runAsUser:fsGroup` | `false`                 |
-| `volumePermissions.image.registry`                     | Bitnami Shell image registry                                                                    | `docker.io`             |
-| `volumePermissions.image.repository`                   | Bitnami Shell image repository                                                                  | `bitnami/bitnami-shell` |
-| `volumePermissions.image.tag`                          | Bitnami Shell image tag (immutable tags are recommended)                                        | `11-debian-11-r0`       |
-| `volumePermissions.image.pullPolicy`                   | Bitnami Shell image pull policy                                                                 | `IfNotPresent`          |
-| `volumePermissions.image.pullSecrets`                  | Bitnami Shell image pull secrets                                                                | `[]`                    |
-| `volumePermissions.resources.limits`                   | The resources limits for the init container                                                     | `{}`                    |
-| `volumePermissions.resources.requests`                 | The requested resources for the init container                                                  | `{}`                    |
-| `volumePermissions.containerSecurityContext.runAsUser` | Set init container's Security Context runAsUser                                                 | `0`                     |
-
+| Name                                                   | Description                                                                                                        | Value              |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ | ------------------ |
+| `volumePermissions.enabled`                            | Enable init container that changes the owner/group of the PV mount point to `runAsUser:fsGroup`                    | `false`            |
+| `volumePermissions.image.registry`                     | OS Shell + Utility image registry                                                                                  | `docker.io`        |
+| `volumePermissions.image.repository`                   | OS Shell + Utility image repository                                                                                | `bitnami/os-shell` |
+| `volumePermissions.image.tag`                          | OS Shell + Utility image tag (immutable tags are recommended)                                                      | `11-debian-11-r31` |
+| `volumePermissions.image.digest`                       | OS Shell + Utility image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag | `""`               |
+| `volumePermissions.image.pullPolicy`                   | OS Shell + Utility image pull policy                                                                               | `IfNotPresent`     |
+| `volumePermissions.image.pullSecrets`                  | OS Shell + Utility image pull secrets                                                                              | `[]`               |
+| `volumePermissions.resources.limits`                   | The resources limits for the init container                                                                        | `{}`               |
+| `volumePermissions.resources.requests`                 | The requested resources for the init container                                                                     | `{}`               |
+| `volumePermissions.containerSecurityContext.runAsUser` | Set init container's Security Context runAsUser                                                                    | `0`                |
 
 ### Other Parameters
 
-| Name                                      | Description                                                                 | Value                |
-| ----------------------------------------- | --------------------------------------------------------------------------- | -------------------- |
-| `rbac.create`                             | Specifies whether RBAC resources should be created                          | `true`               |
-| `redis.image.registry`                    | Argo CD controller image registry                                           | `docker.io`          |
-| `redis.image.repository`                  | Argo CD controller image repository                                         | `bitnami/redis`      |
-| `redis.image.tag`                         | Argo CD controller image tag (immutable tags are recommended)               | `6.2.7-debian-11-r0` |
-| `redis.image.pullPolicy`                  | Argo CD controller image pull policy                                        | `IfNotPresent`       |
-| `redis.image.pullSecrets`                 | Argo CD controller image pull secrets                                       | `[]`                 |
-| `redis.enabled`                           | Enable Redis dependency                                                     | `true`               |
-| `redis.nameOverride`                      | Name override for the Redis dependency                                      | `""`                 |
-| `redis.service.port`                      | Service port for Redis dependency                                           | `6379`               |
-| `redis.auth.enabled`                      | Enable Redis dependency authentication                                      | `true`               |
-| `redis.auth.existingSecret`               | Existing secret to load redis dependency password                           | `""`                 |
-| `redis.auth.existingSecretPasswordKey`    | Pasword key name inside the existing secret                                 | `redis-password`     |
-| `redis.architecture`                      | Redis&reg; architecture. Allowed values: `standalone` or `replication`      | `standalone`         |
-| `externalRedis.host`                      | External Redis host                                                         | `""`                 |
-| `externalRedis.port`                      | External Redis port                                                         | `6379`               |
-| `externalRedis.password`                  | External Redis password                                                     | `""`                 |
-| `externalRedis.existingSecret`            | Existing secret for the external redis                                      | `""`                 |
-| `externalRedis.existingSecretPasswordKey` | Password key for the existing secret containing the external redis password | `redis-password`     |
+| Name                                      | Description                                                                                           | Value                  |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------------- | ---------------------- |
+| `rbac.create`                             | Specifies whether RBAC resources should be created                                                    | `true`                 |
+| `redis.image.registry`                    | Redis image registry                                                                                  | `docker.io`            |
+| `redis.image.repository`                  | Redis image repository                                                                                | `bitnami/redis`        |
+| `redis.image.tag`                         | Redis image tag (immutable tags are recommended)                                                      | `7.0.12-debian-11-r24` |
+| `redis.image.digest`                      | Redis image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag | `""`                   |
+| `redis.image.pullPolicy`                  | Redis image pull policy                                                                               | `IfNotPresent`         |
+| `redis.image.pullSecrets`                 | Redis image pull secrets                                                                              | `[]`                   |
+| `redis.enabled`                           | Enable Redis dependency                                                                               | `true`                 |
+| `redis.nameOverride`                      | Name override for the Redis dependency                                                                | `""`                   |
+| `redis.service.port`                      | Service port for Redis dependency                                                                     | `6379`                 |
+| `redis.auth.enabled`                      | Enable Redis dependency authentication                                                                | `true`                 |
+| `redis.auth.existingSecret`               | Existing secret to load redis dependency password                                                     | `""`                   |
+| `redis.auth.existingSecretPasswordKey`    | Pasword key name inside the existing secret                                                           | `redis-password`       |
+| `redis.architecture`                      | Redis&reg; architecture. Allowed values: `standalone` or `replication`                                | `standalone`           |
+| `externalRedis.host`                      | External Redis host                                                                                   | `""`                   |
+| `externalRedis.port`                      | External Redis port                                                                                   | `6379`                 |
+| `externalRedis.password`                  | External Redis password                                                                               | `""`                   |
+| `externalRedis.existingSecret`            | Existing secret for the external redis                                                                | `""`                   |
+| `externalRedis.existingSecretPasswordKey` | Password key for the existing secret containing the external redis password                           | `redis-password`       |
+| `redisWait.enabled`                       | Enables waiting for redis                                                                             | `true`                 |
+| `redisWait.extraArgs`                     | Additional arguments for the redis-cli call, such as TLS                                              | `""`                   |
+| `redisWait.securityContext`               | Security context for init container                                                                   | `{}`                   |
 
-
-The above parameters map to the env variables defined in [bitnami/argo-cd](https://github.com/bitnami/bitnami-docker-argo-cd). For more information please refer to the [bitnami/argo-cd](https://github.com/bitnami/bitnami-docker-argo-cd) image documentation.
+The above parameters map to the env variables defined in [bitnami/argo-cd](https://github.com/bitnami/containers/tree/main/bitnami/argo-cd). For more information please refer to the [bitnami/argo-cd](https://github.com/bitnami/containers/tree/main/bitnami/argo-cd) image documentation.
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
@@ -638,7 +875,7 @@ Specify each parameter using the `--set key=value[,key=value]` argument to `helm
 helm install my-release \
   --set controller.replicaCount=2 \
   --set server.metrics.enabled=true \
-    bitnami/argo-cd
+    oci://registry-1.docker.io/bitnamicharts/argo-cd
 ```
 
 The above command sets the argo-cd controller replicas to 2, and enabled argo-cd server metrics.
@@ -648,7 +885,7 @@ The above command sets the argo-cd controller replicas to 2, and enabled argo-cd
 Alternatively, a YAML file that specifies the values for the above parameters can be provided while installing the chart. For example,
 
 ```console
-helm install my-release -f values.yaml bitnami/argo-cd
+helm install my-release -f values.yaml oci://registry-1.docker.io/bitnamicharts/argo-cd
 ```
 
 > **Tip**: You can use the default [values.yaml](values.yaml)
@@ -683,7 +920,6 @@ For more information about each configmap or secret check the references at the 
 In order to use SSO you need to enable Dex by setting `dex.enabled=true`. You can follow [this guide](https://argo-cd.readthedocs.io/en/stable/operator-manual/user-management/#1-register-the-application-in-the-identity-provider) to configure your Argo CD deployment into your identity provider. After that, you need to configure Argo CD like described [here](https://argo-cd.readthedocs.io/en/stable/operator-manual/user-management/#2-configure-argo-cd-for-sso). You can set the Dex configuration at `server.config.dex\.config` that will populate the `argocd-cm` config map.
 
 > NOTE: `dex.config` is the key of the object. IF you are using the Helm CLI to set the parameter you need to scape the `.` like `--set server.config.dex\.config`.
-
 > IMPORTANT: if you enable Dex without configuring it you will get an error similar to `msg="dex is not configured"`, and the Dex pod will never reach the running state.
 
 ### Additional environment variables
@@ -707,7 +943,7 @@ If additional containers are needed in the same pod as argo-cd (such as addition
 
 This chart allows you to set your custom affinity using the `affinity` parameter. Find more information about Pod affinity in the [kubernetes documentation](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity).
 
-As an alternative, use one of the preset configurations for pod affinity, pod anti-affinity, and node affinity available at the [bitnami/common](https://github.com/bitnami/charts/tree/master/bitnami/common#affinities) chart. To do so, set the `podAffinityPreset`, `podAntiAffinityPreset`, or `nodeAffinityPreset` parameters.
+As an alternative, use one of the preset configurations for pod affinity, pod anti-affinity, and node affinity available at the [bitnami/common](https://github.com/bitnami/charts/tree/main/bitnami/common#affinities) chart. To do so, set the `podAffinityPreset`, `podAntiAffinityPreset`, or `nodeAffinityPreset` parameters.
 
 ## Troubleshooting
 
@@ -715,58 +951,17 @@ Find more information about how to deal with common errors related to Bitnami's 
 
 ## Upgrading
 
-### To 3.0.0
-
-This major update the Redis&reg; subchart to its newest major, 16.0.0. [Here](https://github.com/bitnami/charts/tree/master/bitnami/redis#to-1600) you can find more info about the specific changes.
-
-Additionally, this chart has been standardised adding features from other charts.
-
-### To 2.0.0
-
-This major update the Redis&reg; subchart to its newest major, 15.0.0. [Here](https://github.com/bitnami/charts/tree/master/bitnami/redis#to-1500) you can find more info about the specific changes.
-
-### To 1.0.0
-
-In this version, the `image` block is defined once and is used in the different templates, while in the previous version, the `image` block was duplicated for every component
-
-```yaml
-image:
-  registry: docker.io
-  repository: bitnami/argo-cd
-  tag: 2.0.5
-```
-VS
-```yaml
-controller:
-  image:
-    registry: docker.io
-    repository: bitnami/argo-cd
-    tag: 2.0.5
-...
-server:
-  image:
-    registry: docker.io
-    repository: bitnami/argo-cd
-    tag: 2.0.5
-...
-repoServer:
-  image:
-    registry: docker.io
-    repository: bitnami/argo-cd
-    tag: 2.0.5
-```
-
-See [PR#7113](https://github.com/bitnami/charts/pull/7113) for more info about the implemented changes
+Refer to the [chart documentation for more information about how to upgrade from previous releases](https://docs.bitnami.com/kubernetes/infrastructure/argo-cd/administration/upgrade/).
 
 ## License
 
-Copyright &copy; 2022 Bitnami
+Copyright &copy; 2023 VMware, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+<http://www.apache.org/licenses/LICENSE-2.0>
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,

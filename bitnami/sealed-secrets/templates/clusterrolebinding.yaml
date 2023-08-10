@@ -1,9 +1,13 @@
+{{- /*
+Copyright VMware, Inc.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
+
 {{ if .Values.rbac.create }}
 kind: ClusterRoleBinding
 apiVersion: {{ include "common.capabilities.rbac.apiVersion" . }}
 metadata:
-  name: {{ template "common.names.fullname" . }}
-  namespace: {{ include "common.names.namespace" . | quote }}
+  name: {{ template "common.names.fullname.namespace" . }}
   labels: {{- include "common.labels.standard" . | nindent 4 }}
     {{- if .Values.commonLabels }}
     {{- include "common.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
@@ -14,7 +18,7 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ printf "%s-unsealer" (include "common.names.fullname" .) }}
+  name: {{ printf "%s-unsealer" (include "common.names.fullname.namespace" .) }}
 subjects:
   - kind: ServiceAccount
     name: {{ template "sealed-secrets.serviceAccountName" . }}

@@ -1,3 +1,8 @@
+{{- /*
+Copyright VMware, Inc.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
+
 {{- if and .Values.web.enabled (include "concourse.host" .) }}
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
 kind: Deployment
@@ -67,7 +72,7 @@ spec:
       serviceAccountName: {{ template "concourse.web.serviceAccountName" . }}
       initContainers:
         {{- if .Values.postgresql.enabled }}
-        # NOTE: The value postgresql.image is not available unless postgresql.enabled is not set. We could change this to use bitnami-shell if
+        # NOTE: The value postgresql.image is not available unless postgresql.enabled is not set. We could change this to use os-shell if
         # it had the binary wait-for-port.
         # This init container is for avoiding CrashLoopback errors in the Hub container because the PostgreSQL container is not ready
         - name: wait-for-db
@@ -199,6 +204,8 @@ spec:
               value: "/bitnami/concourse/concourse-keys/worker_key.pub"
             - name: CONCOURSE_SESSION_SIGNING_KEY
               value: "/bitnami/concourse/concourse-keys/session_signing_key"
+            - name: CONCOURSE_WEB_PUBLIC_DIR
+              value: "/opt/bitnami/concourse/web/public"
             {{- if .Values.web.logLevel }}
             - name: CONCOURSE_LOG_LEVEL
               value: {{ .Values.web.logLevel | quote }}
@@ -355,30 +362,30 @@ spec:
           resources: {{- toYaml .Values.web.resources | nindent 12 }}
           {{- end }}
           {{- if not .Values.diagnosticMode.enabled }}
-          {{- if .Values.web.startupProbe.enabled }}
+          {{- if .Values.web.customStartupProbe }}
+          startupProbe: {{- include "common.tplvalues.render" (dict "value" .Values.web.customStartupProbe "context" $) | nindent 12 }}
+          {{- else if .Values.web.startupProbe.enabled }}
           startupProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.web.startupProbe "enabled") "context" $) | nindent 12 }}
             tcpSocket:
               port: http
-          {{- else if .Values.web.customStartupProbe }}
-          startupProbe: {{- include "common.tplvalues.render" (dict "value" .Values.web.customStartupProbe "context" $) | nindent 12 }}
           {{- end }}
-          {{- if .Values.web.livenessProbe.enabled }}
+          {{- if .Values.web.customLivenessProbe }}
+          livenessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.web.customLivenessProbe "context" $) | nindent 12 }}
+          {{- else if .Values.web.livenessProbe.enabled }}
           livenessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.web.livenessProbe "enabled") "context" $) | nindent 12 }}
             httpGet:
               path: {{ .Values.web.baseUrl | trimSuffix "/" }}/api/v1/info
               port: http
-          {{- else if .Values.web.customLivenessProbe }}
-          livenessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.web.customLivenessProbe "context" $) | nindent 12 }}
           {{- end }}
-          {{- if .Values.web.readinessProbe.enabled }}
+          {{- if .Values.web.customReadinessProbe }}
+          readinessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.web.customReadinessProbe "context" $) | nindent 12 }}
+          {{- else if .Values.web.readinessProbe.enabled }}
           readinessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.web.readinessProbe "enabled") "context" $) | nindent 12 }}
             httpGet:
               path: {{ .Values.web.baseUrl | trimSuffix "/" }}/api/v1/info
               port: http
-          {{- else if .Values.web.customReadinessProbe }}
-          readinessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.web.customReadinessProbe "context" $) | nindent 12 }}
           {{- end }}
-          {{- end }}     
+          {{- end }}
           volumeMounts:
             - name: concourse-keys
               mountPath: /bitnami/concourse/concourse-keys

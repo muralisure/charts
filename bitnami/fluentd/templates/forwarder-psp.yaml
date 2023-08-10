@@ -1,9 +1,14 @@
+{{- /*
+Copyright VMware, Inc.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
+
 {{- $pspAvailable := (semverCompare "<1.25-0" (include "common.capabilities.kubeVersion" .)) -}}
 {{- if and $pspAvailable .Values.forwarder.enabled .Values.forwarder.rbac.create .Values.forwarder.rbac.pspEnabled }}
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
 metadata:
-  name: {{ include "common.names.fullname" . }}-forwarder
+  name: {{ printf "%s-forwarder" (include "common.names.fullname" .) | trunc 63 | trimSuffix "-" }}
   namespace: {{ .Release.Namespace | quote }}
   labels: {{- include "common.labels.standard" . | nindent 4 }}
     app.kubernetes.io/component: forwarder
@@ -30,7 +35,7 @@ spec:
     - 'downwardAPI'
     - 'hostPath'
     - 'persistentVolumeClaim'
-  hostNetwork: false
+  hostNetwork: {{ .Values.forwarder.hostNetwork }}
   hostIPC: false
   hostPID: false
   runAsUser:

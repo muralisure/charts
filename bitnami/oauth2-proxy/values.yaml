@@ -1,3 +1,6 @@
+# Copyright VMware, Inc.
+# SPDX-License-Identifier: APACHE-2.0
+
 ## @section Global parameters
 ## Global Docker image parameters
 ## Please, note that this will override the image parameters, including dependencies, configured to use the global value
@@ -212,6 +215,9 @@ ingress:
   ##       -----END CERTIFICATE-----
   ##
   secrets: []
+  ## @param ingress.existingSecretName If you're providing your own certificate and want to manage the secret yourself
+  ##
+  existingSecretName: ""
   ## @param ingress.extraRules Additional rules to be covered with this ingress record
   ## ref: https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-rules
   ## e.g:
@@ -219,7 +225,7 @@ ingress:
   ## - host: example.local
   ##     http:
   ##       path: /
-  ##       backend: 
+  ##       backend:
   ##         service:
   ##           name: example-svc
   ##           port:
@@ -235,13 +241,15 @@ ingress:
 ## @param image.registry OAuth2 Proxy image registry
 ## @param image.repository OAuth2 Proxy image repository
 ## @param image.tag OAuth2 Proxy image tag (immutable tags are recommended)
+## @param image.digest OAuth2 Proxy image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
 ## @param image.pullPolicy OAuth2 Proxy image pull policy
 ## @param image.pullSecrets OAuth2 Proxy image pull secrets
 ##
 image:
   registry: docker.io
   repository: bitnami/oauth2-proxy
-  tag: 7.3.0-debian-11-r3
+  tag: 7.4.0-debian-11-r252
+  digest: ""
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
   ## ref: https://kubernetes.io/docs/user-guide/images/#pre-pulling-images
@@ -286,14 +294,14 @@ configuration:
   ##
   ## @param configuration.google.enabled Enable Google service account
   ## @param configuration.google.adminEmail Google admin email
-  ## @param configuration.google.googleGroup Restrict logins to members of this google group
+  ## @param configuration.google.groups Restrict logins to members of these google groups
   ## @param configuration.google.serviceAccountJson Google Service account JSON
   ## @param configuration.google.existingSecret Existing secret containing Google Service Account
   ##
   google:
     enabled: false
     adminEmail: ""
-    googleGroup: ""
+    groups: []
     serviceAccountJson: ""
     existingSecret: ""
   ## Custom configuration file: oauth2_proxy.cfg
@@ -344,12 +352,29 @@ configuration:
     ##
     content: ""
 
+  ## @param configuration.oidcIssuerUrl OpenID Connect issuer URL
+  oidcIssuerUrl: ""
+
+  ## @param configuration.redirectUrl OAuth Redirect URL
+  redirectUrl: ""
+
+  ## @param configuration.whiteList Allowed domains for redirection after authentication. Prefix domain with a . or a *. to allow subdomains
+  whiteList: ""
+
 ## @section OAuth2 Proxy deployment parameters
 ##
 
 ## @param containerPort OAuth2 Proxy port number
 ##
 containerPort: 4180
+
+## @param extraContainerPorts Array of additional container ports for the OAuth2 Proxy container
+## e.g:
+## extraContainerPorts:
+##   - name: metrics
+##     containerPort: 9100
+##
+extraContainerPorts: []
 
 ## @param replicaCount Number of OAuth2 Proxy replicas to deploy
 ##
@@ -433,7 +458,7 @@ resources:
 pdb:
   create: false
   minAvailable: 1
-  maxUnavailable: 1
+  maxUnavailable: ""
 
 ## Configure Pods Security Context
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
@@ -571,6 +596,24 @@ sidecars: []
 ##    command: ['sh', '-c', 'echo "hello world"']
 ##
 initContainers: []
+## @param dnsPolicy Pod DNS policy. Valid values are 'ClusterFirstWithHostNet', 'ClusterFirst', 'Default' or 'None'.
+## ref: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy
+##
+dnsPolicy: ""
+## @param dnsConfig Pod DNS configuration.
+## ref: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-dns-config
+## e.g:
+## dnsConfig:
+##   nameservers:
+##   - 8.8.8.8
+##   - 8.8.4.4
+##   options:
+##   - name: ndots
+##     value: "2"
+##   searches:
+##   - example.com
+##
+dnsConfig: {}
 
 ## ServiceAccount configuration
 ##

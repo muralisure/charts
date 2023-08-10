@@ -1,4 +1,9 @@
 {{/*
+Copyright VMware, Inc.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
+
+{{/*
 Return the proper certmanager.image name
 */}}
 {{- define "certmanager.image" -}}
@@ -150,12 +155,12 @@ Compile all warnings into a single message.
 {{- end -}}
 {{- end -}}
 
-{{/* Validate values of Cert Manager - CRD */}}
+{{/* Validate values of cert-manager - CRD */}}
 {{- define "certmanager.validateValues.setCRD" -}}
 {{- if not .Values.installCRDs -}}
 cert-manager: CRDs
-    You will use cert manager without installing CRDs.
-    If you want to include our CRD resources, please install the cert manager using the crd flags (--set .Values.installCRDs=true).
+    You will use cert-manager without installing CRDs.
+    If you want to include our CRD resources, please install the cert-manager using the crd flags (--set .Values.installCRDs=true).
 {{- end -}}
 {{- end -}}
 

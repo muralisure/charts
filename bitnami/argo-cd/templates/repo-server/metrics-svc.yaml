@@ -1,3 +1,8 @@
+{{- /*
+Copyright VMware, Inc.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
+
 {{- if .Values.repoServer.metrics.enabled }}
 apiVersion: v1
 kind: Service
@@ -15,7 +20,7 @@ metadata:
     {{- include "common.tplvalues.render" (dict "value" .Values.commonAnnotations "context" $) | nindent 4 }}
     {{- end }}
     {{- if .Values.repoServer.metrics.service.annotations }}
-    {{- include "common.tplvalues.render" ( dict "value" .Values.service.annotations "context" $) | nindent 4 }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.repoServer.metrics.service.annotations "context" $) | nindent 4 }}
     {{- end }}
 spec:
   type: {{ .Values.repoServer.metrics.service.type }}

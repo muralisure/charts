@@ -1,9 +1,15 @@
+{{- /*
+Copyright VMware, Inc.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
+
+{{- if .Values.speaker.enabled }}
 {{- $pspAvailable := (semverCompare "<1.25-0" (include "common.capabilities.kubeVersion" .)) -}}
 {{- if and $pspAvailable .Values.psp.create .Values.speaker.psp.create -}}
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
 metadata:
-  name: {{ printf "%s-speaker" (include "common.names.fullname" .) }}
+  name: {{ printf "%s-speaker" (include "common.names.fullname" .) | trunc 63 | trimSuffix "-" }}
   namespace: {{ include "common.names.namespace" . | quote }}
   labels: {{- include "common.labels.standard" . | nindent 4 }}
     app.kubernetes.io/component: speaker
@@ -40,4 +46,5 @@ spec:
   - configMap
   - secret
   - emptyDir
+{{- end -}}
 {{- end -}}

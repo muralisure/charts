@@ -1,4 +1,9 @@
-const COMMAND_DELAY = 800;
+/*
+ * Copyright VMware, Inc.
+ * SPDX-License-Identifier: APACHE-2.0
+ */
+
+const COMMAND_DELAY = 2000;
 
 for (const command of ['click']) {
   Cypress.Commands.overwrite(command, (originalFn, ...args) => {

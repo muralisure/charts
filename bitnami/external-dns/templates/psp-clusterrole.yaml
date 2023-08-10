@@ -1,10 +1,14 @@
+{{- /*
+Copyright VMware, Inc.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
+
 {{- $pspAvailable := (semverCompare "<1.25-0" (include "common.capabilities.kubeVersion" .)) -}}
 {{- if and $pspAvailable  .Values.rbac.pspEnabled }}
 kind: ClusterRole
 apiVersion: {{ include "common.capabilities.rbac.apiVersion" . }}
 metadata:
-  name: {{ template "external-dns.fullname" . }}-psp
-  namespace: {{ .Release.Namespace | quote }}
+  name: {{ printf "%s-%s" (include "common.names.fullname.namespace" .) "psp" | trunc 63 | trimSuffix "-" }}
   labels: {{ include "external-dns.labels" . | nindent 4 }}
     {{- if .Values.commonLabels }}
     {{- include "common.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
@@ -17,5 +21,5 @@ rules:
   resources: ['podsecuritypolicies']
   verbs:     ['use']
   resourceNames:
-  - {{ template "external-dns.fullname" . }}
+  - {{ template "common.names.fullname.namespace" . }}
 {{- end }}

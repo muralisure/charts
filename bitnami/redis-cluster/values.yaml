@@ -1,3 +1,6 @@
+# Copyright VMware, Inc.
+# SPDX-License-Identifier: APACHE-2.0
+
 ## @section Global parameters
 ## Global Docker image parameters
 ## Please, note that this will override the image parameters, including dependencies, configured to use the global value
@@ -62,6 +65,7 @@ diagnosticMode:
 ## @param image.registry Redis&reg; cluster image registry
 ## @param image.repository Redis&reg; cluster image repository
 ## @param image.tag Redis&reg; cluster image tag (immutable tags are recommended)
+## @param image.digest Redis&reg; cluster image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
 ## @param image.pullPolicy Redis&reg; cluster image pull policy
 ## @param image.pullSecrets Specify docker-registry secret names as an array
 ## @param image.debug Enable image debug mode
@@ -70,9 +74,10 @@ image:
   registry: docker.io
   repository: bitnami/redis-cluster
   ## Bitnami Redis&reg; image tag
-  ## ref: https://github.com/bitnami/bitnami-docker-redis#supported-tags-and-respective-dockerfile-links
+  ## ref: https://github.com/bitnami/containers/tree/main/bitnami/redis#supported-tags-and-respective-dockerfile-links
   ##
-  tag: 6.2.7-debian-11-r3
+  tag: 7.0.12-debian-11-r15
+  digest: ""
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
   ## ref: https://kubernetes.io/docs/user-guide/images/#pre-pulling-images
@@ -179,7 +184,7 @@ containerSecurityContext:
 usePassword: true
 ## @param password Redis&reg; password (ignored if existingSecret set)
 ## Defaults to a random 10-character alphanumeric string if not set and usePassword is true
-## ref: https://github.com/bitnami/bitnami-docker-redis#setting-the-server-password-on-first-run
+## ref: https://github.com/bitnami/containers/tree/main/bitnami/redis#setting-the-server-password-on-first-run
 ##
 password: ""
 ## @param existingSecret Name of existing secret object (for password authentication)
@@ -282,10 +287,22 @@ service:
   ##     timeoutSeconds: 300
   ##
   sessionAffinityConfig: {}
+  ## Headless service properties
+  ##
+  headless:
+    ## @param service.headless.annotations Annotations for the headless service.
+    ##
+    annotations: {}
 ## Enable persistence using Persistent Volume Claims
 ## ref: https://kubernetes.io/docs/user-guide/persistent-volumes/
 ##
 persistence:
+  ## @param persistence.enabled Enable persistence on Redis&reg;
+  ## If enabled, nodes are using Persistent Volume Claims
+  ## If disabled, an emptyDir volume is used. This is not recommended.
+  ## ref: https://github.com/bitnami/charts/tree/main/bitnami/redis-cluster#persistence
+  ##
+  enabled: true
   ## @param persistence.path Path to mount the volume at, to use other images Redis&reg; images.
   ##
   path: /bitnami/redis/data
@@ -318,6 +335,16 @@ persistence:
   ##
   matchExpressions: {}
 
+## persistentVolumeClaimRetentionPolicy
+## ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#persistentvolumeclaim-retention
+## @param persistentVolumeClaimRetentionPolicy.enabled Controls if and how PVCs are deleted during the lifecycle of a StatefulSet
+## @param persistentVolumeClaimRetentionPolicy.whenScaled Volume retention behavior when the replica count of the StatefulSet is reduced
+## @param persistentVolumeClaimRetentionPolicy.whenDeleted Volume retention behavior that applies when the StatefulSet is deleted
+persistentVolumeClaimRetentionPolicy:
+  enabled: false
+  whenScaled: Retain
+  whenDeleted: Retain
+
 ## Init containers parameters:
 ## volumePermissions: Change the owner of the persist volume mountpoint to RunAsUser:fsGroup
 ##
@@ -328,13 +355,15 @@ volumePermissions:
   ## @param volumePermissions.image.registry Init container volume-permissions image registry
   ## @param volumePermissions.image.repository Init container volume-permissions image repository
   ## @param volumePermissions.image.tag Init container volume-permissions image tag
+  ## @param volumePermissions.image.digest Init container volume-permissions image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
   ## @param volumePermissions.image.pullPolicy Init container volume-permissions image pull policy
   ## @param volumePermissions.image.pullSecrets Specify docker-registry secret names as an array
   ##
   image:
     registry: docker.io
-    repository: bitnami/bitnami-shell
-    tag: 11-debian-11-r3
+    repository: bitnami/os-shell
+    tag: 11-debian-11-r19
+    digest: ""
     pullPolicy: IfNotPresent
     ## Optionally specify an array of imagePullSecrets.
     ## Secrets must be manually created in the namespace.
@@ -344,6 +373,15 @@ volumePermissions:
     ##   - myRegistryKeySecretName
     ##
     pullSecrets: []
+  ## Containers Security Context
+  ## @param volumePermissions.containerSecurityContext.enabled Enable Containers' Security Context
+  ## @param volumePermissions.containerSecurityContext.runAsUser User ID for the containers.
+  ## @param volumePermissions.containerSecurityContext.privileged Run container as privileged
+  ##
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 0
+    privileged: false
   ## Container resource requests and limits
   ## ref: https://kubernetes.io/docs/user-guide/compute-resources/
   ## @param volumePermissions.resources.limits The resources limits for the container
@@ -448,6 +486,11 @@ redis:
   ## @param redis.priorityClassName Redis&reg; Master pod priorityClassName
   ##
   priorityClassName: ""
+  ## @param redis.defaultConfigOverride Optional default Redis&reg; configuration for the nodes
+  ## If not set, the default Redis configuration from the chart is used
+  ## ref: https://redis.io/topics/config
+  ##
+  defaultConfigOverride: ""
   ## @param redis.configmap Additional Redis&reg; configuration for the nodes
   ## ref: https://redis.io/topics/config
   ##
@@ -788,13 +831,15 @@ metrics:
   ## @param metrics.image.registry Redis&reg; exporter image registry
   ## @param metrics.image.repository Redis&reg; exporter image name
   ## @param metrics.image.tag Redis&reg; exporter image tag
+  ## @param metrics.image.digest Redis&reg; exporter image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
   ## @param metrics.image.pullPolicy Redis&reg; exporter image pull policy
   ## @param metrics.image.pullSecrets Specify docker-registry secret names as an array
   ##
   image:
     registry: docker.io
     repository: bitnami/redis-exporter
-    tag: 1.40.0-debian-11-r0
+    tag: 1.52.0-debian-11-r0
+    digest: ""
     pullPolicy: IfNotPresent
     ## Optionally specify an array of imagePullSecrets.
     ## Secrets must be manually created in the namespace.
@@ -808,11 +853,18 @@ metrics:
   ## ref: https://kubernetes.io/docs/user-guide/compute-resources/
   ##
   resources: {}
-  ## @param metrics.extraArgs Extra arguments for the binary; possible values [here](https://github.com/oliver006/redis_exporter
+  ## @param metrics.extraArgs Extra arguments for the binary; possible values [here](https://github.com/oliver006/redis_exporter)
   ## extraArgs:
   ##   check-keys: myKey,myOtherKey
   ##
   extraArgs: {}
+  ## @param metrics.extraEnvVars Array with extra environment variables to add to Redis&reg; exporter
+  ## e.g:
+  # extraEnvVars:
+  ##   - name: FOO
+  ##     value: "bar"
+  ##
+  extraEnvVars: []
   ## @param metrics.podAnnotations [object] Additional annotations for Metrics exporter pod
   ##
   podAnnotations:
@@ -821,6 +873,13 @@ metrics:
   ## @param metrics.podLabels Additional labels for Metrics exporter pod
   ##
   podLabels: {}
+  ## Containers' Security Context - All fields other than `enabled` get added to the metrics container's security context
+  ## @param metrics.containerSecurityContext.enabled Enable Metrics Containers' Security Context
+  ## @param metrics.containerSecurityContext.allowPrivilegeEscalation Allow Privilege Escalation for metrics container
+  ##
+  containerSecurityContext:
+    enabled: false
+    allowPrivilegeEscalation: false
   ## Enable this if you're using https://github.com/coreos/prometheus-operator
   ##
   serviceMonitor:
@@ -840,7 +899,7 @@ metrics:
     ##
     scrapeTimeout: ""
     ## @param metrics.serviceMonitor.selector Prometheus instance selector labels
-    ## ref: https://github.com/bitnami/charts/tree/master/bitnami/prometheus-operator#prometheus-configuration
+    ## ref: https://github.com/bitnami/charts/tree/main/bitnami/prometheus-operator#prometheus-configuration
     ## e.g:
     ## selector:
     ##   prometheus: my-prometheus
@@ -942,12 +1001,14 @@ sysctlImage:
   ## @param sysctlImage.registry sysctlImage Init container registry
   ## @param sysctlImage.repository sysctlImage Init container repository
   ## @param sysctlImage.tag sysctlImage Init container tag
+  ## @param sysctlImage.digest sysctlImage Init container digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
   ## @param sysctlImage.pullPolicy sysctlImage Init container pull policy
   ## @param sysctlImage.pullSecrets Specify docker-registry secret names as an array
   ##
   registry: docker.io
-  repository: bitnami/bitnami-shell
-  tag: 11-debian-11-r3
+  repository: bitnami/os-shell
+  tag: 11-debian-11-r19
+  digest: ""
   pullPolicy: IfNotPresent
   ## Optionally specify an array of imagePullSecrets.
   ## Secrets must be manually created in the namespace.
@@ -960,6 +1021,15 @@ sysctlImage:
   ## @param sysctlImage.mountHostSys Mount the host `/sys` folder to `/host-sys`
   ##
   mountHostSys: false
+  ## Containers Security Context
+  ## @param sysctlImage.containerSecurityContext.enabled Enable Containers' Security Context
+  ## @param sysctlImage.containerSecurityContext.runAsUser User ID for the containers.
+  ## @param sysctlImage.containerSecurityContext.privileged Run privileged as privileged
+  ##
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 0
+    privileged: true
   ## Container resource requests and limits
   ## ref: https://kubernetes.io/docs/user-guide/compute-resources/
   ## @param sysctlImage.resources.limits The resources limits for the container

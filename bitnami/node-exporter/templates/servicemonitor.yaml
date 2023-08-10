@@ -1,3 +1,8 @@
+{{- /*
+Copyright VMware, Inc.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
+
 {{- if .Values.serviceMonitor.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -11,10 +16,10 @@ metadata:
     {{- if .Values.serviceMonitor.labels }}
     {{- include "common.tplvalues.render" ( dict "value" .Values.serviceMonitor.labels "context" $ ) | nindent 4 }}
     {{- end }}
+  {{- if .Values.commonAnnotations }}
   annotations:
-    {{- if .Values.commonAnnotations }}
     {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
-    {{- end }}
+  {{- end }}
 spec:
   {{- if .Values.serviceMonitor.jobLabel }}
   jobLabel: {{ .Values.serviceMonitor.jobLabel }}
@@ -32,6 +37,9 @@ spec:
       {{- if .Values.serviceMonitor.scrapeTimeout }}
       scrapeTimeout: {{ .Values.serviceMonitor.scrapeTimeout }}
       {{- end }}
+      {{- if .Values.serviceMonitor.basicAuth }}
+      basicAuth: {{- include "common.tplvalues.render" ( dict "value" .Values.serviceMonitor.basicAuth "context" $) | nindent 8 }}
+      {{- end }}
       {{- if .Values.serviceMonitor.honorLabels }}
       honorLabels: {{ .Values.serviceMonitor.honorLabels }}
       {{- end }}
@@ -44,4 +52,7 @@ spec:
   namespaceSelector:
     matchNames:
     - {{ include "common.names.namespace" . }}
+  {{- if .Values.serviceMonitor.attachMetadata }}
+  attachMetadata: {{- include "common.tplvalues.render" ( dict "value" .Values.serviceMonitor.attachMetadata "context" $) | nindent 4 }}
+  {{- end }}
 {{- end }}

@@ -1,5 +1,10 @@
-const COMMAND_DELAY = 500;
-const BASE_URL = 'http://bitnami-mediawiki.my';
+/*
+ * Copyright VMware, Inc.
+ * SPDX-License-Identifier: APACHE-2.0
+ */
+
+const COMMAND_DELAY = 2000;
+const BASE_URL = 'http://vmware-mediawiki.my';
 
 for (const command of ['click']) {
   Cypress.Commands.overwrite(command, (originalFn, ...args) => {

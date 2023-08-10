@@ -1,3 +1,8 @@
+{{- /*
+Copyright VMware, Inc.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
+
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
 kind: Deployment
 metadata:
@@ -87,6 +92,9 @@ spec:
           {{- else }}
           args:
             - --v={{ .Values.logLevel }}
+            {{- if .Values.controller.extraArgs }}
+            {{- include "common.tplvalues.render" (dict "value" .Values.controller.extraArgs "context" $) | nindent 12 }}
+            {{- end }}
           {{- if .Values.clusterResourceNamespace }}
             - --cluster-resource-namespace={{ .Values.clusterResourceNamespace }}
           {{- else }}

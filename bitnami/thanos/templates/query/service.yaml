@@ -1,3 +1,8 @@
+{{- /*
+Copyright VMware, Inc.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
+
 {{- $query := (include "thanos.query.values" . | fromYaml) -}}
 {{- if $query.enabled -}}
 apiVersion: v1
@@ -7,8 +12,12 @@ metadata:
   namespace: {{ .Release.Namespace | quote }}
   labels: {{- include "common.labels.standard" . | nindent 4 }}
     app.kubernetes.io/component: query
+    {{- include "thanos.servicemonitor.matchLabels" . | nindent 4 -}}
     {{- if .Values.commonLabels }}
     {{- include "common.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
+    {{- end }}
+    {{- if $query.service.labels }}
+    {{- include "common.tplvalues.render" ( dict "value" $query.service.labels "context" $ ) | nindent 4 }}
     {{- end }}
   annotations:
     {{- if .Values.commonAnnotations }}
@@ -32,21 +41,12 @@ spec:
   loadBalancerSourceRanges: {{- toYaml $query.service.loadBalancerSourceRanges | nindent 4 }}
   {{- end }}
   ports:
-    - port: {{ if $query.service.http }}{{ coalesce $query.service.ports.http $query.service.http.port }}{{ else }}{{ $query.service.ports.http }}{{ end }}
+    - port: {{ $query.service.ports.http }}
       targetPort: http
       protocol: TCP
       name: http
       {{- if and (or (eq $query.service.type "NodePort") (eq $query.service.type "LoadBalancer")) $query.service.nodePorts.http }}
       nodePort: {{ $query.service.nodePorts.http }}
-      {{- else if eq $query.service.type "ClusterIP" }}
-      nodePort: null
-      {{- end }}
-    - port: {{ if $query.service.grpc }}{{ coalesce $query.service.ports.grpc $query.service.grpc.port }}{{ else }}{{ $query.service.ports.grpc }}{{ end }}
-      targetPort: grpc
-      protocol: TCP
-      name: grpc
-      {{- if and (or (eq $query.service.type "NodePort") (eq $query.service.type "LoadBalancer")) $query.service.nodePorts.grpc }}
-      nodePort: {{ $query.service.nodePorts.grpc }}
       {{- else if eq $query.service.type "ClusterIP" }}
       nodePort: null
       {{- end }}

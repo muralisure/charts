@@ -1,4 +1,9 @@
 {{/*
+Copyright VMware, Inc.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
+
+{{/*
 Return the proper Argo CD image name
 */}}
 {{- define "argocd.image" -}}
@@ -20,10 +25,17 @@ Return the proper image name (for the init container volume-permissions image)
 {{- end -}}
 
 {{/*
+Return the proper Redis image name
+*/}}
+{{- define "argocd.redis.image" -}}
+{{- include "common.images.image" ( dict "imageRoot" .Values.redis.image "global" .Values.global ) -}}
+{{- end -}}
+
+{{/*
 Return the proper Docker Image Registry Secret Names
 */}}
 {{- define "argocd.imagePullSecrets" -}}
-{{- include "common.images.pullSecrets" (dict "images" (list .Values.image .Values.dex.image .Values.volumePermissions.image) "global" .Values.global) -}}
+{{- include "common.images.pullSecrets" (dict "images" (list .Values.image .Values.dex.image .Values.volumePermissions.image .Values.redis.image) "global" .Values.global) -}}
 {{- end -}}
 
 {{/*
@@ -34,10 +46,38 @@ Return the proper service name for Argo CD controller
 {{- end -}}
 
 {{/*
+Return the proper service name for Argo CD controller adding the working namespace
+*/}}
+{{- define "argocd.namespace.application-controller" -}}
+  {{- printf "%s-app-controller" (include "common.names.fullname.namespace" .) | trunc 63 | trimSuffix "-" }}
+{{- end -}}
+
+{{/*
+Return the proper service name for Argo CD applicationSet controller
+*/}}
+{{- define "argocd.applicationSet" -}}
+  {{- printf "%s-applicationset-controller" (include "common.names.fullname" .) | trunc 63 | trimSuffix "-" }}
+{{- end -}}
+
+{{/*
+Return the proper service name for Argo CD notifications controller
+*/}}
+{{- define "argocd.notifications" -}}
+  {{- printf "%s-notifications" (include "common.names.fullname" .) | trunc 63 | trimSuffix "-" }}
+{{- end -}}
+
+{{/*
 Return the proper service name for Argo CD server
 */}}
 {{- define "argocd.server" -}}
   {{- printf "%s-server" (include "common.names.fullname" .) | trunc 63 | trimSuffix "-" }}
+{{- end -}}
+
+{{/*
+Return the proper service name for Argo CD server adding the working namespace
+*/}}
+{{- define "argocd.namespace.server" -}}
+  {{- printf "%s-server" (include "common.names.fullname.namespace" .) | trunc 63 | trimSuffix "-" }}
 {{- end -}}
 
 {{/*
@@ -93,6 +133,39 @@ Create the name of the service account to use for the Argo CD application contro
     {{ default (printf "%s-argocd-app-controller" (include "common.names.fullname" .)) .Values.controller.serviceAccount.name | trunc 63 | trimSuffix "-" }}
 {{- else -}}
     {{ default "default" .Values.controller.serviceAccount.name }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Create the name of the service account to use for the Argo CD applicationSet controller
+*/}}
+{{- define "argocd.applicationSet.serviceAccountName" -}}
+{{- if .Values.applicationSet.serviceAccount.create -}}
+    {{ default (printf "%s-applicationset-controller" (include "common.names.fullname" .)) .Values.applicationSet.serviceAccount.name | trunc 63 | trimSuffix "-" }}
+{{- else -}}
+    {{ default "default" .Values.applicationSet.serviceAccount.name }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Create the name of the service account to use for the Argo CD notifications controller
+*/}}
+{{- define "argocd.notifications.serviceAccountName" -}}
+{{- if .Values.notifications.serviceAccount.create -}}
+    {{ default (printf "%s-notifications" (include "common.names.fullname" .)) .Values.notifications.serviceAccount.name | trunc 63 | trimSuffix "-" }}
+{{- else -}}
+    {{ default "default" .Values.notifications.serviceAccount.name }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Create the name of the service account to use for the Argo CD Slack bot
+*/}}
+{{- define "argocd.notifications.bots.slack.serviceAccountName" -}}
+{{- if .Values.notifications.bots.slack.serviceAccount.create -}}
+    {{ default (printf "%s-notifications-slack-bot" (include "common.names.fullname" .)) .Values.notifications.bots.slack.serviceAccount.name | trunc 63 | trimSuffix "-" }}
+{{- else -}}
+    {{ default "default" .Values.notifications.bots.slack.serviceAccount.name }}
 {{- end -}}
 {{- end -}}
 

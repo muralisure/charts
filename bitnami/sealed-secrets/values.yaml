@@ -1,3 +1,6 @@
+# Copyright VMware, Inc.
+# SPDX-License-Identifier: APACHE-2.0
+
 ## @section Global parameters
 ## Global Docker image parameters
 ## Please, note that this will override the image parameters, including dependencies, configured to use the global value
@@ -53,6 +56,7 @@ extraDeploy: []
 ## @param image.registry Sealed Secrets image registry
 ## @param image.repository Sealed Secrets image repository
 ## @param image.tag Sealed Secrets image tag (immutable tags are recommended)
+## @param image.digest Sealed Secrets image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
 ## @param image.pullPolicy Sealed Secrets image pull policy
 ## @param image.pullSecrets [array]  Sealed Secrets image pull secrets
 ## @param image.debug Enable Sealed Secrets image debug mode
@@ -60,7 +64,8 @@ extraDeploy: []
 image:
   registry: docker.io
   repository: bitnami/sealed-secrets
-  tag: 0.18.0-scratch-r1
+  tag: 0.23.0-scratch-r2
+  digest: ""
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
   ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
@@ -155,22 +160,34 @@ customStartupProbe: {}
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
 ## @param podSecurityContext.enabled Enabled Sealed Secret pods' Security Context
 ## @param podSecurityContext.fsGroup Set Sealed Secret pod's Security Context fsGroup
+## @param podSecurityContext.seccompProfile.type Set Sealed Secret pod's Security Context seccompProfile type
 ##
 podSecurityContext:
   enabled: true
   fsGroup: 1001
+  seccompProfile:
+    type: RuntimeDefault
 ## Configure Container Security Context
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
 ## @param containerSecurityContext.enabled Enabled Sealed Secret containers' Security Context
+## @param containerSecurityContext.allowPrivilegeEscalation Whether the Sealed Secret container can escalate privileges
+## @param containerSecurityContext.capabilities.drop Which privileges to drop in the Sealed Secret container
 ## @param containerSecurityContext.readOnlyRootFilesystem Whether the Sealed Secret container has a read-only root filesystem
 ## @param containerSecurityContext.runAsNonRoot Indicates that the Sealed Secret container must run as a non-root user
 ## @param containerSecurityContext.runAsUser Set Sealed Secret containers' Security Context runAsUser
+## @param containerSecurityContext.seccompProfile.type Set Sealed Secret container's Security Context seccompProfile type
 ##
 containerSecurityContext:
   enabled: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
   readOnlyRootFilesystem: true
   runAsNonRoot: true
   runAsUser: 1001
+  seccompProfile:
+    type: RuntimeDefault
 ## @param hostAliases [array] Sealed Secret pods host aliases
 ## https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/
 ##
@@ -240,7 +257,7 @@ topologySpreadConstraints: []
 ## ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/
 ##
 schedulerName: ""
-## @param terminationGracePeriodSeconds Seconds Redmine pod needs to terminate gracefully
+## @param terminationGracePeriodSeconds Seconds the pod needs to terminate gracefully
 ## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod/#termination-of-pods
 ##
 terminationGracePeriodSeconds: ""
@@ -297,10 +314,13 @@ service:
   ## @param service.type Sealed Secret service type
   ##
   type: ClusterIP
-  ## @param service.ports.http Sealed Secret service HTTP port
-  ##
   ports:
+    ## @param service.ports.http Sealed Secret service HTTP port number
+    ##  
     http: 8080
+    ## @param service.ports.name Sealed Secret service HTTP port name
+    ##
+    name: http
   ## @param service.nodePorts.http Node port for HTTP
   ## Specify the nodePort value for the LoadBalancer and NodePort service types
   ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport
@@ -548,7 +568,7 @@ metrics:
     ##
     relabelings: []
     ## @param metrics.serviceMonitor.selector Prometheus instance selector labels
-    ## ref: https://github.com/bitnami/charts/tree/master/bitnami/prometheus-operator#prometheus-configuration
+    ## ref: https://github.com/bitnami/charts/tree/main/bitnami/prometheus-operator#prometheus-configuration
     ## selector:
     ##   prometheus: my-prometheus
     ##

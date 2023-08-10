@@ -1,3 +1,6 @@
+# Copyright VMware, Inc.
+# SPDX-License-Identifier: APACHE-2.0
+
 ## @section Global parameters
 ## Global Docker image parameters
 ## Please, note that this will override the image parameters, including dependencies, configured to use the global value
@@ -53,6 +56,7 @@ extraDeploy: []
 ## @param image.registry ASP.NET Core image registry
 ## @param image.repository ASP.NET Core image repository
 ## @param image.tag ASP.NET Core image tag (immutable tags are recommended)
+## @param image.digest ASP.NET Core image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
 ## @param image.pullPolicy ASP.NET Core image pull policy
 ## @param image.pullSecrets ASP.NET Core image pull secrets
 ## @param image.debug Enable image debug mode
@@ -60,7 +64,8 @@ extraDeploy: []
 image:
   registry: docker.io
   repository: bitnami/aspnet-core
-  tag: 6.0.6-debian-11-r0
+  tag: 7.0.10-debian-11-r0
+  digest: ""
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
   ## ref: https://kubernetes.io/docs/user-guide/images/#pre-pulling-images
@@ -364,13 +369,15 @@ appFromExternalRepo:
     ## @param appFromExternalRepo.clone.image.registry Git image registry
     ## @param appFromExternalRepo.clone.image.repository Git image repository
     ## @param appFromExternalRepo.clone.image.tag Git image tag (immutable tags are recommended)
+    ## @param appFromExternalRepo.clone.image.digest Git image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
     ## @param appFromExternalRepo.clone.image.pullPolicy Git image pull policy
     ## @param appFromExternalRepo.clone.image.pullSecrets Git image pull secrets
     ##
     image:
       registry: docker.io
       repository: bitnami/git
-      tag: 2.36.1-debian-11-r5
+      tag: 2.41.0-debian-11-r64
+      digest: ""
       ## Specify a imagePullPolicy
       ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
       ## ref: https://kubernetes.io/docs/user-guide/images/#pre-pulling-images
@@ -404,13 +411,15 @@ appFromExternalRepo:
     ## @param appFromExternalRepo.publish.image.registry .NET SDK image registry
     ## @param appFromExternalRepo.publish.image.repository .NET SDK image repository
     ## @param appFromExternalRepo.publish.image.tag .NET SDK image tag (immutable tags are recommended)
+    ## @param appFromExternalRepo.publish.image.digest .NET SDK image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
     ## @param appFromExternalRepo.publish.image.pullPolicy .NET SDK image pull policy
     ## @param appFromExternalRepo.publish.image.pullSecrets .NET SDK image pull secrets
     ##
     image:
       registry: docker.io
       repository: bitnami/dotnet-sdk
-      tag: 6.0.301-debian-11-r0
+      tag: 7.0.400-debian-11-r0
+      digest: ""
       ## Specify a imagePullPolicy
       ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
       ## ref: https://kubernetes.io/docs/user-guide/images/#pre-pulling-images
@@ -426,13 +435,13 @@ appFromExternalRepo:
       pullSecrets: []
     ## @param appFromExternalRepo.publish.subFolder Sub folder under the Git repository containing the ASP.NET Core app
     ##
-    subFolder: aspnetcore/fundamentals/servers/kestrel/samples/6.x/KestrelSample
+    subFolder: aspnetcore/performance/caching/output/samples/7.x/
     ## @param appFromExternalRepo.publish.extraFlags Extra flags to be appended to "dotnet publish" command
     ##
     extraFlags: []
   ## @param appFromExternalRepo.startCommand Command used to start ASP.NET Core app
   ##
-  startCommand: ["dotnet", "KestrelSample.dll"]
+  startCommand: ["dotnet", "OCMinimal.dll"]
 ## Enable mounting your ASP.NET Core app from an existing PVC
 ## Do not enable it if your docker image already includes your application
 ## @param appFromExistingPVC.enabled Enable mounting your ASP.NET Core app from an existing PVC
@@ -715,6 +724,9 @@ serviceAccount:
   ## @param serviceAccount.annotations Additional custom annotations for the ServiceAccount
   ##
   annotations: {}
+  ## @param serviceAccount.extraLabels Additional labels for the ServiceAccount
+  ##
+  extraLabels: {}
   ## @param serviceAccount.automountServiceAccountToken Automount service account token
   ##
   automountServiceAccountToken: true

@@ -1,3 +1,8 @@
+{{/*
+Copyright VMware, Inc.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
+
 {{/* vim: set filetype=mustache: */}}
 
 {{/*
@@ -45,6 +50,18 @@ Fully qualified app name for LDAP
 {{- else -}}
 {{- printf "%s-%s-ldap" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
+{{- end -}}
+{{- end -}}
+
+
+{{/*
+ Create the name of the service account to use
+ */}}
+{{- define "postgresql-ha.serviceAccountName" -}}
+{{- if .Values.serviceAccount.create -}}
+    {{ default (include "common.names.fullname" .) .Values.serviceAccount.name }}
+{{- else -}}
+    {{ default "default" .Values.serviceAccount.name }}
 {{- end -}}
 {{- end -}}
 
@@ -539,7 +556,7 @@ postgresql-ha: LDAP
     Invalid LDAP configuration. When enabling LDAP support, the parameters "ldap.uri",
     "ldap.basedn", "ldap.binddn", and "ldap.bindpw" are mandatory. Please provide them:
 
-    $ helm install {{ .Release.Name }} bitnami/postgresql-ha \
+    $ helm install {{ .Release.Name }} oci://registry-1.docker.io/bitnamicharts/postgresql-ha \
       --set ldap.enabled=true \
       --set ldap.uri="ldap://my_ldap_server" \
       --set ldap.basedn="dc=example\,dc=org" \
@@ -564,7 +581,7 @@ postgresql-ha: LDAP & pg_hba.conf
 postgresql-ha: Upgrade repmgr extension
     There must be only one replica when upgrading repmgr extension:
 
-    $ helm upgrade {{ .Release.Name }} bitnami/postgresql-ha \
+    $ helm upgrade {{ .Release.Name }} oci://registry-1.docker.io/bitnamicharts/postgresql-ha \
       --set postgresql.replicaCount=1 \
       --set postgresql.upgradeRepmgrExtension=true
 {{- end -}}
@@ -701,11 +718,3 @@ Return the path to the cert key file.
 {{- define "postgresql-ha.postgresql.tlsCertKey" -}}
 {{- required "Certificate Key filename is required when TLS in enabled" .Values.postgresql.tls.certKeyFilename | printf "/opt/bitnami/postgresql/certs/%s" -}}
 {{- end -}}
-
-{{/*
-Return the path to the CA cert file.
-*/}}
-{{- define "postgresql-ha.postgresql.tlsCACert" -}}
-{{- printf "/opt/bitnami/postgresql/certs/%s" .Values.postgresql.tls.certCAFilename -}}
-{{- end -}}
-

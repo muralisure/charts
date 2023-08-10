@@ -1,3 +1,8 @@
+{{- /*
+Copyright VMware, Inc.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
+
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -34,7 +39,9 @@ data:
       {{- else if eq .Values.persistence.imageChartStorage.type "gcs" }}
       gcs:
         bucket: {{ .Values.persistence.imageChartStorage.gcs.bucket }}
+        {{- if .Values.persistence.imageChartStorage.gcs.encodedkey }}
         keyfile: /etc/registry/gcs-key.json
+        {{- end }}
         {{- if .Values.persistence.imageChartStorage.gcs.rootdirectory }}
         rootdirectory: {{ .Values.persistence.imageChartStorage.gcs.rootdirectory }}
         {{- end }}
@@ -155,6 +162,9 @@ data:
         disable: {{ .Values.persistence.imageChartStorage.disableredirect }}
     redis:
       addr: "{{ template "harbor.redis.host" . }}:{{ template "harbor.redis.port" . }}"
+      {{- if ne "" (include "harbor.redis.sentinel.masterSet" .) }}
+      sentinelMasterSet: "{{ template "harbor.redis.sentinel.masterSet" . }}"
+      {{- end }}
       db: {{ template "harbor.redis.registryDatabaseIndex" . }}
     http:
       relativeurls: {{ .Values.registry.relativeurls }}

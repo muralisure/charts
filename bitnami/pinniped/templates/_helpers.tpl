@@ -1,4 +1,9 @@
 {{/*
+Copyright VMware, Inc.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
+
+{{/*
 Return the proper concierge image name
 */}}
 {{- define "pinniped.image" -}}
@@ -34,7 +39,7 @@ Return the proper Concierge fullname (with ns)
 Return the proper Concierge API fullname
 */}}
 {{- define "pinniped.concierge.api.fullname" -}}
-{{- printf "%s-%s" (include "pinniped.concierge.fullname" .) "api" | trunc 63 | trimSuffix "-" -}}
+{{- printf "%s-%s" (include "pinniped.concierge.fullname.namespace" .) "api" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*
@@ -104,6 +109,20 @@ Return the proper Supervisor fullname
 */}}
 {{- define "pinniped.supervisor.fullname" -}}
 {{- printf "%s-%s" (include "common.names.fullname" .) "supervisor" | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/*
+Return the proper Supervisor fullname (with ns)
+*/}}
+{{- define "pinniped.supervisor.fullname.namespace" -}}
+{{- printf "%s-%s-%s" (include "common.names.fullname" .) "supervisor" (include "common.names.namespace" .) | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/*
+Return the proper Supervisor API fullname
+*/}}
+{{- define "pinniped.supervisor.api.fullname" -}}
+{{- printf "%s-%s" (include "pinniped.supervisor.fullname" .) "api" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*

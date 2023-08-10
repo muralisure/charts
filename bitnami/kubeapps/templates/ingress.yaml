@@ -1,4 +1,9 @@
-{{- if .Values.ingress.enabled -}}
+{{- /*
+Copyright VMware, Inc.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
+
+{{- if and .Values.ingress.enabled (not .Values.featureFlags.apiOnly.enabled) -}}
 apiVersion: {{ include "common.capabilities.ingress.apiVersion" . }}
 kind: Ingress
 metadata:

@@ -1,3 +1,6 @@
+# Copyright VMware, Inc.
+# SPDX-License-Identifier: APACHE-2.0
+
 ## @section Global parameters
 ## Global Docker image parameters
 ## Please, note that this will override the image parameters, including dependencies, configured to use the global value
@@ -65,13 +68,15 @@ tempo:
   ## @param tempo.image.registry Grafana Tempo image registry
   ## @param tempo.image.repository Grafana Tempo image repository
   ## @param tempo.image.tag Grafana Tempo image tag (immutable tags are recommended)
+  ## @param tempo.image.digest Grafana Tempo image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
   ## @param tempo.image.pullPolicy Grafana Tempo image pull policy
   ## @param tempo.image.pullSecrets Grafana Tempo image pull secrets
   ##
   image:
     registry: docker.io
     repository: bitnami/grafana-tempo
-    tag: 1.4.1-debian-11-r3
+    tag: 2.1.1-debian-11-r84
+    digest: ""
     ## Specify a imagePullPolicy
     ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
     ## ref: https://kubernetes.io/docs/user-guide/images/#pre-pulling-images
@@ -120,18 +125,10 @@ tempo:
     ## @param tempo.traces.zipkin Enable Tempo to ingest Zipkin traces
     ##
     zipkin: false
-  ## Tempo search parameters
-  ##
-  search:
-    ## @param tempo.search.enabled Enable Tempo search
-    ##
-    enabled: false
   ## @param tempo.configuration [string] Tempo components configuration
   ##
   configuration: |
     multitenancy_enabled: false
-    search_enabled: {{ .Values.tempo.search.enabled }}
-    metrics_generator_enabled: {{ .Values.metricsGenerator.enabled }}
     compactor:
       compaction:
         block_retention: 48h
@@ -193,7 +190,6 @@ tempo:
           kvstore:
             store: memberlist
         tokens_file_path: {{ .Values.tempo.dataDir }}/tokens.json
-    {{- if .Values.metricsGenerator.enabled }}
     metrics_generator:
       ring:
         kvstore:
@@ -201,7 +197,6 @@ tempo:
       storage:
         path: {{ .Values.tempo.dataDir }}/wal
         remote_write: {{ include "common.tplvalues.render" (dict "value" .Values.metricsGenerator.remoteWrite "context" $) | nindent 6 }}
-    {{- end }}
     memberlist:
       abort_if_cluster_join_fails: false
       join_members:
@@ -239,7 +234,7 @@ tempo:
   ## @param tempo.containerPorts.gossipRing Tempo components Gossip Ring container port
   ##
   containerPorts:
-    web: 3100
+    web: 3200
     grpc: 9095
     gossipRing: 7946
   ## Gossip Ring parameters
@@ -296,7 +291,7 @@ compactor:
   livenessProbe:
     enabled: true
     failureThreshold: 3
-    initialDelaySeconds: 60
+    initialDelaySeconds: 80
     periodSeconds: 10
     successThreshold: 1
     timeoutSeconds: 1
@@ -310,7 +305,7 @@ compactor:
   readinessProbe:
     enabled: true
     failureThreshold: 3
-    initialDelaySeconds: 60
+    initialDelaySeconds: 80
     periodSeconds: 10
     successThreshold: 1
     timeoutSeconds: 1
@@ -473,7 +468,7 @@ compactor:
     ## @param compactor.service.ports.http Compactor HTTP service port
     ##
     ports:
-      http: 3100
+      http: 3200
     ## Node ports to expose
     ## NOTE: choose port between <30000-32767>
     ## @param compactor.service.nodePorts.http Node port for HTTP
@@ -733,7 +728,7 @@ distributor:
     ## @param distributor.service.ports.grpc Distributor GRPC service port
     ##
     ports:
-      http: 3100
+      http: 3200
       grpc: 9095
     ## Node ports to expose
     ## NOTE: choose port between <30000-32767>
@@ -784,9 +779,7 @@ distributor:
 ## @section Metrics Generator Deployment Parameters
 ##
 metricsGenerator:
-  ## @param metricsGenerator.enabled enable metricsGenerator
   ## @param metricsGenerator.remoteWrite remoteWrite configuration for metricsGenerator
-  enabled: false
   remoteWrite: []
   ## @param metricsGenerator.extraEnvVars Array with extra environment variables to add to metricsGenerator nodes
   ## e.g:
@@ -1000,7 +993,7 @@ metricsGenerator:
     ## @param metricsGenerator.service.ports.grpc metricsGenerator GRPC service port
     ##
     ports:
-      http: 3100
+      http: 3200
       grpc: 9095
     ## Node ports to expose
     ## NOTE: choose port between <30000-32767>
@@ -1300,7 +1293,7 @@ ingester:
     ## @param ingester.service.ports.grpc Ingester GRPC service port
     ##
     ports:
-      http: 3100
+      http: 3200
       grpc: 9095
     ## Node ports to expose
     ## NOTE: choose port between <30000-32767>
@@ -1563,7 +1556,7 @@ querier:
     ## @param querier.service.ports.grpc Querier GRPC service port
     ##
     ports:
-      http: 3100
+      http: 3200
       grpc: 9095
     ## Node ports to expose
     ## NOTE: choose port between <30000-32767>
@@ -1822,13 +1815,15 @@ queryFrontend:
     ## @param queryFrontend.query.image.registry Grafana Tempo Query image registry
     ## @param queryFrontend.query.image.repository Grafana Tempo Query image repository
     ## @param queryFrontend.query.image.tag Grafana Tempo Query image tag (immutable tags are recommended)
+    ## @param queryFrontend.query.image.digest Grafana Tempo Query image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
     ## @param queryFrontend.query.image.pullPolicy Grafana Tempo Query image pull policy
     ## @param queryFrontend.query.image.pullSecrets Grafana Tempo Query image pull secrets
     ##
     image:
       registry: docker.io
       repository: bitnami/grafana-tempo-query
-      tag: 1.4.1-debian-11-r3
+      tag: 2.1.1-debian-11-r87
+      digest: ""
       ## Specify a imagePullPolicy
       ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
       ## ref: https://kubernetes.io/docs/user-guide/images/#pre-pulling-images
@@ -1966,7 +1961,7 @@ queryFrontend:
     ## @param queryFrontend.service.ports.grpc queryFrontend GRPC service port
     ##
     ports:
-      http: 3100
+      http: 3200
       grpc: 9095
     ## Node ports to expose
     ## NOTE: choose port between <30000-32767>
@@ -2013,6 +2008,12 @@ queryFrontend:
     ## @param queryFrontend.service.extraPorts Extra ports to expose in the queryFrontend service
     ##
     extraPorts: []
+    ## Headless service properties
+    ##
+    headless:
+      ## @param queryFrontend.service.headless.annotations Annotations for the headless service.
+      ##
+      annotations: {}
 
 ## @section Vulture Deployment Parameters
 ##
@@ -2025,13 +2026,15 @@ vulture:
   ## @param vulture.image.registry Grafana Vulture image registry
   ## @param vulture.image.repository Grafana Vulture image repository
   ## @param vulture.image.tag Grafana Vulture image tag (immutable tags are recommended)
+  ## @param vulture.image.digest Grafana Vulture image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
   ## @param vulture.image.pullPolicy Grafana Vulture image pull policy
   ## @param vulture.image.pullSecrets Grafana Vulture image pull secrets
   ##
   image:
     registry: docker.io
     repository: bitnami/grafana-tempo-vulture
-    tag: 1.4.1-debian-11-r3
+    tag: 2.1.1-debian-11-r84
+    digest: ""
     ## Specify a imagePullPolicy
     ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
     ## ref: https://kubernetes.io/docs/user-guide/images/#pre-pulling-images
@@ -2260,7 +2263,7 @@ vulture:
     ## @param vulture.service.ports.http Vulture HTTP service port
     ##
     ports:
-      http: 3100
+      http: 3200
     ## Node ports to expose
     ## NOTE: choose port between <30000-32767>
     ## @param vulture.service.nodePorts.http Node port for HTTP
@@ -2316,18 +2319,20 @@ volumePermissions:
   ## @param volumePermissions.enabled Enable init container that changes the owner/group of the PV mount point to `runAsUser:fsGroup`
   ##
   enabled: false
-  ## Bitnami Shell image
-  ## ref: https://hub.docker.com/r/bitnami/bitnami-shell/tags/
-  ## @param volumePermissions.image.registry Bitnami Shell image registry
-  ## @param volumePermissions.image.repository Bitnami Shell image repository
-  ## @param volumePermissions.image.tag Bitnami Shell image tag (immutable tags are recommended)
-  ## @param volumePermissions.image.pullPolicy Bitnami Shell image pull policy
-  ## @param volumePermissions.image.pullSecrets Bitnami Shell image pull secrets
+  ## OS Shell + Utility image
+  ## ref: https://hub.docker.com/r/bitnami/os-shell/tags/
+  ## @param volumePermissions.image.registry OS Shell + Utility image registry
+  ## @param volumePermissions.image.repository OS Shell + Utility image repository
+  ## @param volumePermissions.image.tag OS Shell + Utility image tag (immutable tags are recommended)
+  ## @param volumePermissions.image.digest OS Shell + Utility image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
+  ## @param volumePermissions.image.pullPolicy OS Shell + Utility image pull policy
+  ## @param volumePermissions.image.pullSecrets OS Shell + Utility image pull secrets
   ##
   image:
     registry: docker.io
-    repository: bitnami/bitnami-shell
-    tag: 11-debian-11-r3
+    repository: bitnami/os-shell
+    tag: 11-debian-11-r16
+    digest: ""
     pullPolicy: IfNotPresent
     ## Optionally specify an array of imagePullSecrets.
     ## Secrets must be manually created in the namespace.
@@ -2404,7 +2409,7 @@ metrics:
     ##
     labels: {}
     ## @param metrics.serviceMonitor.selector Prometheus instance selector labels
-    ## ref: https://github.com/bitnami/charts/tree/master/bitnami/prometheus-operator#prometheus-configuration
+    ## ref: https://github.com/bitnami/charts/tree/main/bitnami/prometheus-operator#prometheus-configuration
     ##
     selector: {}
     ## @param metrics.serviceMonitor.relabelings RelabelConfigs to apply to samples before scraping
@@ -2438,7 +2443,7 @@ memcached:
   ##
   enabled: true
   ## Authentication parameters
-  ## ref: https://github.com/bitnami/bitnami-docker-memcached#creating-the-memcached-admin-user
+  ## ref: https://github.com/bitnami/containers/tree/main/bitnami/memcached#creating-the-memcached-admin-user
   ##
   auth:
     ## @param memcached.auth.enabled Enable Memcached authentication

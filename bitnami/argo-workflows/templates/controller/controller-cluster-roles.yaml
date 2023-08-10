@@ -1,3 +1,8 @@
+{{- /*
+Copyright VMware, Inc.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
+
 {{- if .Values.controller.rbac.create }}
 apiVersion: rbac.authorization.k8s.io/v1
 {{- if .Values.rbac.singleNamespace }}
@@ -6,8 +11,10 @@ kind: Role
 kind: ClusterRole
 {{- end }}
 metadata:
-  name: {{ include "argo-workflows.controller.fullname" . }}
+  name: {{ include "argo-workflows.controller.fullname.namespace" . }}
+  {{- if .Values.rbac.singleNamespace }}
   namespace: {{ .Release.Namespace | quote }}
+  {{- end }}
   labels: {{- include "common.labels.standard" . | nindent 4 }}
     app.kubernetes.io/part-of: argo-workflows
     app.kubernetes.io/component: controller
@@ -56,6 +63,7 @@ rules:
       - workflows/finalizers
       - workflowtasksets
       - workflowtasksets/finalizers
+      - workflowartifactgctasks
     verbs:
       - get
       - list
@@ -123,6 +131,8 @@ rules:
     resourceNames:
       - {{ include "argo-workflows.controller.database.username.secret" . }}
       - {{ include "argo-workflows.controller.database.password.secret" . }}
+      {{/* for HTTP templates */}}
+      - argo-workflows-agent-ca-certificates
     verbs:
       - get
   {{- end }}
@@ -161,8 +171,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ include "argo-workflows.controller.fullname" . }}-cluster-template
-  namespace: {{ .Release.Namespace | quote }}
+  name: {{ include "argo-workflows.controller.fullname.namespace" . }}-cluster-template
   labels: {{- include "common.labels.standard" . | nindent 4 }}
     app.kubernetes.io/part-of: argo-workflows
     app.kubernetes.io/component: controller

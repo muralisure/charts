@@ -1,3 +1,6 @@
+# Copyright VMware, Inc.
+# SPDX-License-Identifier: APACHE-2.0
+
 ## @section Global parameters
 ## Global Docker image parameters
 ## Please, note that this will override the image parameters, including dependencies, configured to use the global value
@@ -56,14 +59,16 @@ operator:
   ## ref: https://hub.docker.com/r/bitnami/prometheus-operator/tags/
   ## @param operator.image.registry Prometheus Operator image registry
   ## @param operator.image.repository Prometheus Operator image repository
-  ## @param operator.image.tag Prometheus Operator Image tag (immutable tags are recommended)
+  ## @param operator.image.tag Prometheus Operator image tag (immutable tags are recommended)
+  ## @param operator.image.digest Prometheus Operator image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
   ## @param operator.image.pullPolicy Prometheus Operator image pull policy
   ## @param operator.image.pullSecrets Specify docker-registry secret names as an array
   ##
   image:
     registry: docker.io
     repository: bitnami/prometheus-operator
-    tag: 0.57.0-debian-11-r4
+    tag: 0.67.1-debian-11-r0
+    digest: ""
     ## Specify a imagePullPolicy
     ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
     ## ref: https://kubernetes.io/docs/user-guide/images/#pre-pulling-images
@@ -237,6 +242,9 @@ operator:
     ## ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
     ##
     healthCheckNodePort: ""
+    ## @param operator.service.labels Additional labels for Prometheus Operator service
+    ##
+    labels: {}
     ## @param operator.service.annotations Additional annotations for Prometheus Operator service
     ##
     annotations: {}
@@ -260,6 +268,9 @@ operator:
     ## @param operator.serviceMonitor.enabled Creates a ServiceMonitor to monitor Prometheus Operator
     ##
     enabled: true
+    ## @param operator.serviceMonitor.jobLabel The name of the label on the target service to use as the job name in prometheus.
+    ##
+    jobLabel: ""
     ## @param operator.serviceMonitor.interval Scrape interval (use by default, falling back to Prometheus' default)
     ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#endpoint
     ##
@@ -282,6 +293,11 @@ operator:
     ## @param operator.serviceMonitor.annotations Extra annotations for the ServiceMonitor
     ##
     annotations: {}
+    ## @param operator.serviceMonitor.extraParameters Any extra parameter to be added to the endpoint configured in the ServiceMonitor
+    ## (e.g. tlsConfig for further customization of the HTTPS behavior)
+    ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#monitoring.coreos.com/v1.Endpoint
+    ##
+    extraParameters: {}
   ## @param operator.resources Configure resource requests and limits
   ## ref: https://kubernetes.io/docs/user-guide/compute-resources/
   ##
@@ -424,6 +440,7 @@ operator:
     ## registry:
     ## repository:
     ## tag:
+    ## digest: ""
     ## pullSecrets:
     ##
     image: {}
@@ -475,6 +492,11 @@ operator:
       timeoutSeconds: 5
       failureThreshold: 6
       successThreshold: 1
+  ## Restrict the namespaces that the operator watches
+  ## ref: `-namespaces` in https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/operator.md
+  ## @param operator.namespaces Optional comma-separated list of namespaces to watch (default=all).
+  ##
+  namespaces: ""
 
 ## @section Prometheus Parameters
 ##
@@ -489,13 +511,15 @@ prometheus:
   ## ref: https://hub.docker.com/r/bitnami/prometheus/tags/
   ## @param prometheus.image.registry Prometheus image registry
   ## @param prometheus.image.repository Prometheus image repository
-  ## @param prometheus.image.tag Prometheus Image tag (immutable tags are recommended)
+  ## @param prometheus.image.tag Prometheus image tag (immutable tags are recommended)
+  ## @param prometheus.image.digest Prometheus image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
   ## @param prometheus.image.pullSecrets Specify docker-registry secret names as an array
   ##
   image:
     registry: docker.io
     repository: bitnami/prometheus
-    tag: 2.36.1-debian-11-r2
+    tag: 2.46.0-debian-11-r5
+    digest: ""
     ## Optionally specify an array of imagePullSecrets.
     ## Secrets must be manually created in the namespace.
     ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
@@ -603,6 +627,9 @@ prometheus:
     ## ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
     ##
     healthCheckNodePort: ""
+    ## @param prometheus.service.labels Additional labels for Prometheus service  (this value is evaluated as a template)
+    ##
+    labels: {}
     ## @param prometheus.service.annotations Additional annotations for Prometheus service  (this value is evaluated as a template)
     ##
     annotations: {}
@@ -621,6 +648,9 @@ prometheus:
     ## @param prometheus.serviceMonitor.enabled Creates a ServiceMonitor to monitor Prometheus itself
     ##
     enabled: true
+    ## @param prometheus.serviceMonitor.jobLabel The name of the label on the target service to use as the job name in prometheus.
+    ##
+    jobLabel: ""
     ## @param prometheus.serviceMonitor.interval Scrape interval (use by default, falling back to Prometheus' default)
     ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#endpoint
     ##
@@ -635,7 +665,7 @@ prometheus:
     relabelings: []
 
   ## Configure the ingress resource that allows you to access the
-  ## Alertmanager installation. Set up the URL
+  ## Prometheus installation. Set up the URL
   ## ref: https://kubernetes.io/docs/user-guide/ingress/
   ##
   ingress:
@@ -718,6 +748,7 @@ prometheus:
     ##   key:
     ##   certificate:
     ##
+    ## NOTE: the secret name MUST match {{ingress.hostname}}-tls to be used if selfSigned is false or no certManager is used
     secrets: []
     ## @param prometheus.ingress.extraRules Additional rules to be covered with this ingress record
     ## ref: https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-rules
@@ -779,6 +810,11 @@ prometheus:
   ## ref: https://kubernetes.io/docs/user-guide/node-selection/
   ##
   nodeSelector: {}
+  ## @param prometheus.topologySpreadConstraints Prometheus Topology Spread Constraints for pod assignment
+  ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/
+  ## The value is evaluated as a template
+  ##
+  topologySpreadConstraints: []
   ## @param prometheus.tolerations Prometheus Tolerations for pod assignment
   ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
   ##
@@ -789,6 +825,10 @@ prometheus:
   ## @param prometheus.evaluationInterval Interval between consecutive evaluations
   ##
   evaluationInterval: ""
+  ## @param prometheus.scrapeTimeout Timeout after which the global scrape is ended
+  ## ref: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config
+  ##
+  scrapeTimeout: ""
   ## @param prometheus.listenLocal ListenLocal makes the Prometheus server listen on loopback
   ##
   listenLocal: false
@@ -919,6 +959,14 @@ prometheus:
   ## See https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#namespaceselector for usage
   ##
   probeNamespaceSelector: {}
+  ## @param prometheus.scrapeConfigSelector ScrapeConfig to be selected for target discovery.
+  ## If {}, select all ScrapeConfig
+  ##
+  scrapeConfigSelector: {}
+  ## @param prometheus.scrapeConfigNamespaceSelector Namespaces to be selected for ScrapeConfig discovery
+  ## See https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#namespaceselector for usage
+  ##
+  scrapeConfigNamespaceSelector: {}
   ## @param prometheus.retention Metrics retention days
   ##
   retention: 10d
@@ -970,6 +1018,9 @@ prometheus:
   ## - url: http://remote1/push
   ##
   remoteWrite: []
+  ## @param prometheus.enableRemoteWriteReceiver Enable Prometheus to be used as a receiver for the Prometheus remote write protocol.
+  ##
+  enableRemoteWriteReceiver: false
   ## @param prometheus.storageSpec Prometheus StorageSpec for persistent data
   ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/user-guides/storage.md
   ##
@@ -1063,6 +1114,10 @@ prometheus:
   ##             summary: "Node overtemperature alarm (instance {{ $labels.instance }})"
   ##             description: "Physical node temperature alarm triggered\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
   ##
+  ## @param prometheus.additionalArgs Allows setting additional arguments for the Prometheus container
+  ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#monitoring.coreos.com/v1.Prometheus
+  ##
+  additionalArgs: []
   additionalPrometheusRules: []
   ## Note that the prometheus will fail to provision if the correct secret does not exist.
   ## @param prometheus.additionalScrapeConfigs.enabled Enable additional scrape configs
@@ -1101,6 +1156,16 @@ prometheus:
     enabled: false
     name: ""
     key: ""
+  ## Enable additional Prometheus AlertManager configs that are managed externally to this chart
+  ## Note that the prometheus will fail to provision if the correct secret does not exist.
+  ## @param prometheus.additionalAlertManagerExternal.enabled Enable additional Prometheus AlertManager configs that are managed externally to this chart
+  ## @param prometheus.additionalAlertManagerExternal.name Name of the secret that Prometheus should use for the additional Prometheus AlertManager configuration
+  ## @param prometheus.additionalAlertManagerExternal.key Name of the key inside the secret to be used for the additional Prometheus AlertManager configuration
+  ##
+  additionalAlertManagerExternal:
+    enabled: false
+    name: ""
+    key: ""
   ## Thanos sidecar container configuration
   ##
   thanos:
@@ -1112,13 +1177,15 @@ prometheus:
     ## @param prometheus.thanos.image.registry Thanos image registry
     ## @param prometheus.thanos.image.repository Thanos image name
     ## @param prometheus.thanos.image.tag Thanos image tag
+    ## @param prometheus.thanos.image.digest Thanos image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
     ## @param prometheus.thanos.image.pullPolicy Thanos image pull policy
     ## @param prometheus.thanos.image.pullSecrets Specify docker-registry secret names as an array
     ##
     image:
       registry: docker.io
       repository: bitnami/thanos
-      tag: 0.26.0-scratch-r4
+      tag: 0.31.0-scratch-r12
+      digest: ""
       ## Specify a imagePullPolicy. Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
       ## ref: https://kubernetes.io/docs/user-guide/images/#pre-pulling-images
       ##
@@ -1156,13 +1223,16 @@ prometheus:
     ## - --tsdb.path=/data/
     ##
     extraArgs: []
-    ## @param prometheus.thanos.objectStorageConfig Support mounting a Secret for the objectStorageConfig of the sideCar container.
+    ## @param prometheus.thanos.objectStorageConfig.secretName Support mounting a Secret for the objectStorageConfig of the sideCar container.
+    ## @param prometheus.thanos.objectStorageConfig.secretKey Secret key with the configuration file.
     ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/thanos.md
     ## objectStorageConfig:
     ##    secretName: thanos-objstore-config
     ##    secretKey: thanos.yaml
     ##
-    objectStorageConfig: {}
+    objectStorageConfig:
+      secretName: ""
+      secretKey: thanos.yaml
     ## ref: https://github.com/thanos-io/thanos/blob/main/docs/components/sidecar.md
     ## @param prometheus.thanos.extraVolumeMounts Additional volumeMounts from `prometheus.volumes` for thanos sidecar container
     ## extraVolumeMounts:
@@ -1261,7 +1331,10 @@ prometheus:
       ## - 10.10.10.0/24
       ##
       loadBalancerSourceRanges: []
-      ## @param prometheus.thanos.service.annotations Additional annotations for Prometheus service
+      ## @param prometheus.thanos.service.labels Additional labels for Thanos service
+      ##
+      labels: {}
+      ## @param prometheus.thanos.service.annotations Additional annotations for Thanos service
       ##
       annotations: {}
       ## @param prometheus.thanos.service.extraPorts Additional ports to expose from the Thanos sidecar container
@@ -1384,6 +1457,98 @@ prometheus:
       ## Useful when looking for additional customization, such as using different backend
       ##
       extraRules: []
+  ## config-reloader sidecar container configuration
+  ##
+  configReloader:
+    ## config-reloader sidecar Service
+    ##
+    service:
+      ## @param prometheus.configReloader.service.enabled Enable config-reloader sidecar service
+      ##
+      enabled: false
+      ## @param prometheus.configReloader.service.type Kubernetes service type
+      ##
+      type: ClusterIP
+      ## @param prometheus.configReloader.service.ports.http config-reloader sidecar container service port
+      ##
+      ports:
+        http: 8080
+      ## @param prometheus.configReloader.service.clusterIP Specific cluster IP when service type is cluster IP. Use `None` to create headless service by default.
+      ## Use a "headless" service by default so it returns every pod's IP instead of loadbalancing requests.
+      ##
+      clusterIP: None
+      ## @param prometheus.configReloader.service.nodePorts.http Specify the nodePort value for the LoadBalancer and NodePort service types.
+      ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport
+      ## e.g:
+      ## nodePort: 30901
+      ##
+      nodePorts:
+        http: ""
+      ## @param prometheus.configReloader.service.loadBalancerIP `loadBalancerIP` if service type is `LoadBalancer`
+      ## Set the LoadBalancer service type to internal only
+      ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer
+      ##
+      loadBalancerIP: ""
+      ## @param prometheus.configReloader.service.loadBalancerSourceRanges Address that are allowed when svc is `LoadBalancer`
+      ## https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/#restrict-access-for-loadbalancer-service
+      ## e.g:
+      ## loadBalancerSourceRanges:
+      ## - 10.10.10.0/24
+      ##
+      loadBalancerSourceRanges: []
+      ## @param prometheus.configReloader.service.labels Additional labels for Prometheus service
+      ##
+      labels: {}
+      ## @param prometheus.configReloader.service.annotations Additional annotations for Prometheus service
+      ##
+      annotations: {}
+      ## @param prometheus.configReloader.service.extraPorts Additional ports to expose from the config-reloader sidecar container
+      ## extraPorts:
+      ##   - name: http
+      ##     port: 10902
+      ##     targetPort: http
+      ##     protocol: TCP
+      ##
+      extraPorts: []
+      ## @param prometheus.configReloader.service.externalTrafficPolicy Prometheus service external traffic policy
+      ## ref http://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
+      ##
+      externalTrafficPolicy: Cluster
+      ## @param prometheus.configReloader.service.sessionAffinity Session Affinity for Kubernetes service, can be "None" or "ClientIP"
+      ## If "ClientIP", consecutive client requests will be directed to the same Pod
+      ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#virtual-ips-and-service-proxies
+      ##
+      sessionAffinity: None
+      ## @param prometheus.configReloader.service.sessionAffinityConfig Additional settings for the sessionAffinity
+      ## sessionAffinityConfig:
+      ##   clientIP:
+      ##     timeoutSeconds: 300
+      ##
+      sessionAffinityConfig: {}
+    ## Create a ServiceMonitor to monitor Prometheus config-reloader sidecar
+    ##
+    serviceMonitor:
+      ## @param prometheus.configReloader.serviceMonitor.enabled Creates a ServiceMonitor to monitor Prometheus config-reloader sidecar
+      ##
+      enabled: false
+      ## @param prometheus.configReloader.serviceMonitor.interval Scrape interval (use by default, falling back to Prometheus' default)
+      ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#endpoint
+      ##
+      interval: ""
+      ## @param prometheus.configReloader.serviceMonitor.path HTTP path to scrape for metrics
+      ##
+      path: /metrics
+      ## @param prometheus.configReloader.serviceMonitor.jobLabel The name of the label on the target service to use as the job name in prometheus.
+      ##
+      jobLabel: ""
+      ## @param prometheus.configReloader.serviceMonitor.metricRelabelings Metric relabeling
+      ## ref: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs
+      ##
+      metricRelabelings: []
+      ## @param prometheus.configReloader.serviceMonitor.relabelings Relabel configs
+      ## ref: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
+      ##
+      relabelings: []
   ## @param prometheus.portName Port name used for the pods and governing service. This defaults to web
   ##
   portName: web
@@ -1401,14 +1566,16 @@ alertmanager:
   ## Bitnami Alertmanager image version
   ## ref: https://hub.docker.com/r/bitnami/prometheus-operator/tags/
   ## @param alertmanager.image.registry Prometheus image registry
-  ## @param alertmanager.image.repository Prometheus Image repository
-  ## @param alertmanager.image.tag Prometheus Image tag (immutable tags are recommended)
+  ## @param alertmanager.image.repository Prometheus image repository
+  ## @param alertmanager.image.tag Prometheus image tag (immutable tags are recommended)
+  ## @param alertmanager.image.digest Prometheus image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
   ## @param alertmanager.image.pullSecrets Specify docker-registry secret names as an array
   ##
   image:
     registry: docker.io
     repository: bitnami/alertmanager
-    tag: 0.24.0-debian-11-r5
+    tag: 0.25.0-debian-11-r171
+    digest: ""
     ## Optionally specify an array of imagePullSecrets.
     ## Secrets must be manually created in the namespace.
     ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
@@ -1556,7 +1723,7 @@ alertmanager:
     ##
     scrapeTimeout: ""
     ## @param alertmanager.serviceMonitor.selector ServiceMonitor selector labels
-    ## ref: https://github.com/bitnami/charts/tree/master/bitnami/prometheus-operator#prometheus-configuration
+    ## ref: https://github.com/bitnami/charts/tree/main/bitnami/prometheus-operator#prometheus-configuration
     ##
     ## selector:
     ##   prometheus: my-prometheus
@@ -1571,6 +1738,11 @@ alertmanager:
     ## @param alertmanager.serviceMonitor.honorLabels honorLabels chooses the metric's labels on collisions with target labels
     ##
     honorLabels: false
+    ## @param alertmanager.serviceMonitor.extraParameters Any extra parameter to be added to the endpoint configured in the ServiceMonitor
+    ## (e.g. tlsConfig for further customization of the HTTPS behavior)
+    ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#monitoring.coreos.com/v1.Endpoint
+    ##
+    extraParameters: {}
   ## Configure the ingress resource that allows you to access the
   ## Alertmanager installation. Set up the URL
   ## ref: https://kubernetes.io/docs/user-guide/ingress/
@@ -1868,10 +2040,10 @@ alertmanager:
   ## @param alertmanager.portName Port name used for the pods and governing service. This defaults to web
   ##
   portName: web
-  ## @param alertmanager.configNamespaceSelector AlertmanagerConfigs to be selected for to merge and configure Alertmanager with. This defaults to {}
+  ## @param alertmanager.configNamespaceSelector Namespaces to be selected for AlertmanagerConfig discovery. If nil, only check own namespace. This defaults to {}
   ##
   configNamespaceSelector: {}
-  ## @param alertmanager.configSelector Namespaces to be selected for AlertmanagerConfig discovery. If nil, only check own namespace. This defaults to {}
+  ## @param alertmanager.configSelector AlertmanagerConfigs to be selected for to merge and configure Alertmanager with. This defaults to {}
   ##
   configSelector: {}
   ## @param alertmanager.configuration EXPERIMENTAL: alertmanagerConfiguration specifies the global Alertmanager configuration. If defined, it takes precedence over the `configSecret` field. This field may change in future releases. The specified global alertmanager config will not force add a namespace label in routes and inhibitRules
@@ -1927,6 +2099,23 @@ kubelet:
     ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#endpoint
     ##
     interval: ""
+    ## @param kubelet.serviceMonitor.jobLabel The name of the label on the target service to use as the job name in prometheus.
+    ##
+    jobLabel: k8s-app
+    ## @param kubelet.serviceMonitor.resource Enable scraping /metrics/resource from kubelet's service
+    ##
+    resource: false
+    ## @param kubelet.serviceMonitor.resourcePath From kubernetes 1.18, /metrics/resource/v1alpha1 was renamed to /metrics/resource
+    ##
+    resourcePath: "/metrics/resource/v1alpha1"
+    ## @param kubelet.serviceMonitor.resourceRelabelings Metric relabeling
+    ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#relabelconfig
+    ##
+    resourceRelabelings: []
+    ## @param kubelet.serviceMonitor.resourceMetricRelabelings Metric relabeling
+    ## ref: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs
+    ##
+    resourceMetricRelabelings: []
     ## @param kubelet.serviceMonitor.metricRelabelings Metric relabeling
     ## ref: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs
     ##
@@ -1935,6 +2124,10 @@ kubelet:
     ## ref: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
     ##
     relabelings: []
+    ## @param kubelet.serviceMonitor.cAdvisor Enable scraping /metrics/cadvisor from kubelet's service
+    ## ref: https://prometheus.io/docs/guides/cadvisor/#exploring-metrics-in-the-expression-browser
+    ##
+    cAdvisor: true
     ## @param kubelet.serviceMonitor.cAdvisorMetricRelabelings Metric relabeling for scraping cAdvisor
     ## ref: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs
     ##
@@ -1959,15 +2152,17 @@ blackboxExporter:
   ## Bitnami Alertmanager image version
   ## ref: https://hub.docker.com/r/bitnami/prometheus-operator/tags/
   ## @param blackboxExporter.image.registry Blackbox Exporter image registry
-  ## @param blackboxExporter.image.repository Blackbox Exporter Image repository
-  ## @param blackboxExporter.image.pullPolicy Blackbox Exporter Image pull policy
-  ## @param blackboxExporter.image.tag Blackbox Exporter Image tag (immutable tags are recommended)
+  ## @param blackboxExporter.image.repository Blackbox Exporter image repository
+  ## @param blackboxExporter.image.pullPolicy Blackbox Exporter image pull policy
+  ## @param blackboxExporter.image.tag Blackbox Exporter image tag (immutable tags are recommended)
+  ## @param blackboxExporter.image.digest Blackbox Exporter image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
   ## @param blackboxExporter.image.pullSecrets Specify docker-registry secret names as an array
   ##
   image:
     registry: docker.io
     repository: bitnami/blackbox-exporter
-    tag: 0.21.0-debian-11-r5
+    tag: 0.24.0-debian-11-r76
+    digest: ""
     pullPolicy: IfNotPresent
     ## Optionally specify an array of imagePullSecrets.
     ## Secrets must be manually created in the namespace.
@@ -2315,6 +2510,9 @@ kubeApiServer:
     ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#endpoint
     ##
     interval: ""
+    ## @param kubeApiServer.serviceMonitor.jobLabel The name of the label on the target service to use as the job name in prometheus.
+    ##
+    jobLabel: component
     ## @param kubeApiServer.serviceMonitor.metricRelabelings Metric relabeling
     ## ref: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs
     ##
@@ -2323,6 +2521,12 @@ kubeApiServer:
     ## ref: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
     ##
     relabelings: []
+    ## @param kubeApiServer.serviceMonitor.labels Extra labels for the ServiceMonitor
+    ##
+    labels: { }
+    ## @param kubeApiServer.serviceMonitor.annotations Extra annotations for the ServiceMonitor
+    ##
+    annotations: { }
 ## Component scraping the kube-controller-manager
 ##
 kubeControllerManager:
@@ -2355,11 +2559,17 @@ kubeControllerManager:
     ##   component: kube-controller-manager
     ##
     selector: {}
+    ## @param kubeControllerManager.service.labels Additional labels for kube-controller-manaer service
+    ##
+    labels: {}
   serviceMonitor:
     ## @param kubeControllerManager.serviceMonitor.interval Scrape interval (use by default, falling back to Prometheus' default)
     ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#endpoint
     ##
     interval: ""
+    ## @param kubeControllerManager.serviceMonitor.jobLabel The name of the label on the target service to use as the job name in prometheus.
+    ##
+    jobLabel: component
     ## @param kubeControllerManager.serviceMonitor.https Enable scraping kube-controller-manager over https
     ## Requires proper certs (not self-signed) and delegated authentication/authorization checks
     ##
@@ -2378,6 +2588,12 @@ kubeControllerManager:
     ## ref: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
     ##
     relabelings: []
+    ## @param kubeControllerManager.serviceMonitor.labels Extra labels for the ServiceMonitor
+    ##
+    labels: { }
+    ## @param kubeControllerManager.serviceMonitor.annotations Extra annotations for the ServiceMonitor
+    ##
+    annotations: { }
 ## Component scraping kube scheduler
 ##
 kubeScheduler:
@@ -2410,6 +2626,9 @@ kubeScheduler:
     ##   component: kube-scheduler
     ##
     selector: {}
+    ## @param kubeScheduler.service.labels Additional labels for kube-scheduler service
+    ##
+    labels: {}
   serviceMonitor:
     ## @param kubeScheduler.serviceMonitor.interval Scrape interval (use by default, falling back to Prometheus' default)
     ##
@@ -2418,6 +2637,9 @@ kubeScheduler:
     ## Requires proper certs (not self-signed) and delegated authentication/authorization checks
     ##
     https: false
+    ## @param kubeScheduler.serviceMonitor.jobLabel The name of the label on the target service to use as the job name in prometheus.
+    ##
+    jobLabel: component
     ## @param kubeScheduler.serviceMonitor.insecureSkipVerify Skip TLS certificate validation when scraping
     ##
     insecureSkipVerify: ""
@@ -2472,10 +2694,16 @@ coreDns:
     ##   component: kube-dns
     ##
     selector: {}
+    ## @param coreDns.service.labels Additional labels for coredns service
+    ##
+    labels: {}
   serviceMonitor:
     ## @param coreDns.serviceMonitor.interval Scrape interval. If not set, the Prometheus default scrape interval is used.
     ##
     interval: ""
+    ## @param coreDns.serviceMonitor.jobLabel The name of the label on the target service to use as the job name in prometheus.
+    ##
+    jobLabel: k8s-app
     ## @param coreDns.serviceMonitor.metricRelabelings Metric relabel configs to apply to samples before ingestion.
     ## metricRelabelings:
     ##  - action: keep
@@ -2493,6 +2721,12 @@ coreDns:
     ##    action: replace
     ##
     relabelings: []
+    ## @param coreDns.serviceMonitor.labels Extra labels for the ServiceMonitor
+    ##
+    labels: {}
+    ## @param coreDns.serviceMonitor.annotations Extra annotations for the ServiceMonitor
+    ##
+    annotations: {}
 ## Component scraping the kube-proxy
 ##
 kubeProxy:
@@ -2524,6 +2758,9 @@ kubeProxy:
     ##   k8s-app: kube-proxy
     ##
     selector: {}
+    ## @param kubeProxy.service.labels Additional labels for kube-proxy service
+    ##
+    labels: {}
   serviceMonitor:
     ## @param kubeProxy.serviceMonitor.https Enable scraping kube-proxy over https.
     ## Requires proper certs (not self-signed) and delegated authentication/authorization checks
@@ -2533,6 +2770,9 @@ kubeProxy:
     ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#endpoint
     ##
     interval: ""
+    ## @param kubeProxy.serviceMonitor.jobLabel The name of the label on the target service to use as the job name in prometheus.
+    ##
+    jobLabel: k8s-app
     ## @param kubeProxy.serviceMonitor.metricRelabelings Metric relabeling
     ## ref: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs
     ##

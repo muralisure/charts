@@ -1,4 +1,9 @@
-{{- if and .Values.storegateway.enabled .Values.storegateway.pdb.create }}
+{{- /*
+Copyright VMware, Inc.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
+
+{{- if and .Values.storegateway.enabled .Values.storegateway.pdb.create (not .Values.storegateway.sharded.enabled) }}
 apiVersion: {{ include "common.capabilities.policy.apiVersion" . }}
 kind: PodDisruptionBudget
 metadata:

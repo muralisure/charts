@@ -1,4 +1,9 @@
-{{- if and .Values.metrics.enabled .Values.metrics.customMetrics }}
+{{- /*
+Copyright VMware, Inc.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
+
+{{- if and .Values.metrics.enabled .Values.metrics.customMetrics (eq .Values.architecture "replication") }}
 apiVersion: v1
 kind: ConfigMap
 metadata:

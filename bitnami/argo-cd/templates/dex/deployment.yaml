@@ -1,3 +1,8 @@
+{{- /*
+Copyright VMware, Inc.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
+
 {{- if .Values.dex.enabled }}
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
 kind: Deployment
@@ -53,6 +58,9 @@ spec:
       {{- if .Values.dex.schedulerName }}
       schedulerName: {{ .Values.dex.schedulerName }}
       {{- end }}
+      {{- if .Values.dex.shareProcessNamespace }}
+      shareProcessNamespace: {{ .Values.dex.shareProcessNamespace }}
+      {{- end }}
       {{- if .Values.dex.topologySpreadConstraints }}
       topologySpreadConstraints: {{- include "common.tplvalues.render" (dict "value" .Values.controller.topologySpreadConstraints "context" .) | nindent 8 }}
       {{- end }}
@@ -74,8 +82,8 @@ spec:
             - /bin/bash
             - -ec
             - |
-              chown -R {{ .Values.dex.containerSecurityContext.runAsUser }}:{{ .Values.dex.containerSecurityContext.fsGroup }} /shared
-              chown -R {{ .Values.dex.containerSecurityContext.runAsUser }}:{{ .Values.dex.containerSecurityContext.fsGroup }} /tmp
+              chown -R {{ .Values.dex.containerSecurityContext.runAsUser }}:{{ .Values.dex.podSecurityContext.fsGroup }} /shared
+              chown -R {{ .Values.dex.containerSecurityContext.runAsUser }}:{{ .Values.dex.podSecurityContext.fsGroup }} /tmp
           securityContext:
             runAsUser: {{ .Values.volumePermissions.containerSecurityContext.runAsUser }}
           {{- if .Values.volumePermissions.resources }}
@@ -139,11 +147,9 @@ spec:
             - name: grpc
               containerPort: {{ .Values.dex.containerPorts.grpc }}
               protocol: TCP
-            {{- if .Values.dex.metrics.enabled }}
             - name: metrics
               containerPort: {{ .Values.dex.containerPorts.metrics }}
               protocol: TCP
-            {{- end }}
           env:
             {{- if .Values.dex.extraEnvVars }}
             {{- include "common.tplvalues.render" (dict "value" .Values.dex.extraEnvVars "context" $) | nindent 12 }}
@@ -160,44 +166,44 @@ spec:
           {{- if .Values.dex.resources }}
           resources: {{- toYaml .Values.dex.resources | nindent 12 }}
           {{- end }}
-          {{- if .Values.dex.startupProbe.enabled }}
+          {{- if .Values.dex.customStartupProbe }}
+          startupProbe: {{- include "common.tplvalues.render" (dict "value" .Values.dex.customStartupProbe "context" $) | nindent 12 }}
+          {{- else if .Values.dex.startupProbe.enabled }}
           startupProbe:
             httpGet:
-              path: /healthz
-              port: {{ .Values.dex.containerPorts.http }}
+              path: /healthz/live
+              port: metrics
             initialDelaySeconds: {{ .Values.dex.startupProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.dex.startupProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.dex.startupProbe.timeoutSeconds }}
             successThreshold: {{ .Values.dex.startupProbe.successThreshold }}
             failureThreshold: {{ .Values.dex.startupProbe.failureThreshold }}
-          {{- else if .Values.dex.customStartupProbe }}
-          startupProbe: {{- include "common.tplvalues.render" (dict "value" .Values.dex.customStartupProbe "context" $) | nindent 12 }}
           {{- end }}
-          {{- if .Values.dex.livenessProbe.enabled }}
+          {{- if .Values.dex.customLivenessProbe }}
+          livenessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.dex.customLivenessProbe "context" $) | nindent 12 }}
+          {{- else if .Values.dex.livenessProbe.enabled }}
           livenessProbe:
             httpGet:
-              path: /healthz
-              port: {{ .Values.dex.containerPorts.http }}
+              path: /healthz/live
+              port: metrics
             initialDelaySeconds: {{ .Values.dex.livenessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.dex.livenessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.dex.livenessProbe.timeoutSeconds }}
             successThreshold: {{ .Values.dex.livenessProbe.successThreshold }}
             failureThreshold: {{ .Values.dex.livenessProbe.failureThreshold }}
-          {{- else if .Values.dex.customLivenessProbe }}
-          livenessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.dex.customLivenessProbe "context" $) | nindent 12 }}
           {{- end }}
-          {{- if .Values.dex.readinessProbe.enabled }}
+          {{- if .Values.dex.customReadinessProbe }}
+          readinessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.dex.customReadinessProbe "context" $) | nindent 12 }}
+          {{- else if .Values.dex.readinessProbe.enabled }}
           readinessProbe:
             httpGet:
-              path: /healthz
-              port: {{ .Values.dex.containerPorts.http }}
+              path: /healthz/ready
+              port: metrics
             initialDelaySeconds: {{ .Values.dex.readinessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.dex.readinessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.dex.readinessProbe.timeoutSeconds }}
             successThreshold: {{ .Values.dex.readinessProbe.successThreshold }}
             failureThreshold: {{ .Values.dex.readinessProbe.failureThreshold }}
-          {{- else if .Values.dex.customReadinessProbe }}
-          readinessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.dex.customReadinessProbe "context" $) | nindent 12 }}
           {{- end }}
           volumeMounts:
             - name: static-files

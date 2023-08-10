@@ -1,3 +1,6 @@
+# Copyright VMware, Inc.
+# SPDX-License-Identifier: APACHE-2.0
+
 ## @section Global parameters
 ## Global Docker image parameters
 ## Please, note that this will override the image parameters, including dependencies, configured to use the global value
@@ -61,6 +64,7 @@ diagnosticMode:
 ## @param image.registry WildFly image registry
 ## @param image.repository WildFly image repository
 ## @param image.tag WildFly image tag (immutable tags are recommended)
+## @param image.digest WildFly image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
 ## @param image.pullPolicy WildFly image pull policy
 ## @param image.pullSecrets [array] WildFly image pull secrets
 ## @param image.debug Enable image debug mode
@@ -68,7 +72,8 @@ diagnosticMode:
 image:
   registry: docker.io
   repository: bitnami/wildfly
-  tag: 26.1.1-debian-11-r5
+  tag: 28.0.1-debian-11-r57
+  digest: ""
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
   ## ref: https://kubernetes.io/docs/user-guide/images/#pre-pulling-images
@@ -88,7 +93,7 @@ image:
 
 ## @section WildFly Configuration parameters
 ## WildFly settings based on environment variables
-## ref: https://github.com/bitnami/bitnami-docker-wildfly#configuration
+## ref: https://github.com/bitnami/containers/tree/main/bitnami/wildfly#configuration
 
 ## @param wildflyUsername WildFly username
 ##
@@ -150,6 +155,8 @@ extraVolumes: []
 ## @param extraVolumeMounts [array] Optionally specify extra list of additional volumeMounts for WildFly container(s)
 ##
 extraVolumeMounts: []
+## @param serviceAccountName Name of existing ServiceAccount to be connected
+serviceAccountName: ""
 ## @param sidecars [array] Add additional sidecar containers to the WildFly pod
 ## e.g:
 ## sidecars:
@@ -248,6 +255,15 @@ resources:
 containerPorts:
   http: 8080
   mgmt: 9990
+
+## @param extraContainerPorts [array] Array with extra container ports to add to the WildFly container
+## e.g:
+## extraContainerPorts:
+##   - name: additional-port
+##     value: 8888
+##
+extraContainerPorts: []
+
 ## Configure Pods Security Context
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
 ## @param podSecurityContext.enabled Enabled WildFly pods' Security Context
@@ -428,7 +444,7 @@ ingress:
   ##
   annotations: {}
   ## @param ingress.tls Enable TLS configuration for the host defined at `ingress.hostname` parameter
-  ## TLS certificates will be retrieved from a TLS secret with name: `{{- printf "%s-tls" .Values.ingress.hostname }}`
+  ## TLS certificates will be retrieved from a TLS secret with name: `{{- printf "%s-tls" .Values.ingress.hostname | trunc 63 | trimSuffix "-" }}`
   ## You can:
   ##   - Use the `ingress.secrets` parameter to create this TLS secret
   ##   - Rely on cert-manager to create it by setting the corresponding annotations
@@ -492,7 +508,7 @@ ingress:
   ## - host: wildfly.local
   ##     http:
   ##       path: /
-  ##       backend: 
+  ##       backend:
   ##         service:
   ##           name: wildfly-svc
   ##           port:
@@ -529,7 +545,7 @@ mgmtIngress:
   ##
   annotations: {}
   ## @param mgmtIngress.tls Enable TLS configuration for the hostname defined at `mgmtIngress.hostname` parameter
-  ## TLS certificates will be retrieved from a TLS secret with name: {{- printf "%s-tls" .Values.mgmtIngress.hostname }}
+  ## TLS certificates will be retrieved from a TLS secret with name: {{- printf "%s-tls" .Values.mgmtIngress.hostname | trunc 63 | trimSuffix "-" }}
   ## You can use the mgmtIngress.secrets parameter to create this TLS secret, relay on cert-manager to create it, or
   ## let the chart create self-signed certificates for you
   ##
@@ -619,18 +635,20 @@ volumePermissions:
   ## @param volumePermissions.enabled Enable init container that changes the owner/group of the PV mount point to `runAsUser:fsGroup`
   ##
   enabled: false
-  ## Bitnami Shell image
-  ## ref: https://hub.docker.com/r/bitnami/bitnami-shell/tags/
-  ## @param volumePermissions.image.registry Bitnami Shell image registry
-  ## @param volumePermissions.image.repository Bitnami Shell image repository
-  ## @param volumePermissions.image.tag Bitnami Shell image tag (immutable tags are recommended)
-  ## @param volumePermissions.image.pullPolicy Bitnami Shell image pull policy
-  ## @param volumePermissions.image.pullSecrets [array] Bitnami Shell image pull secrets
+  ## OS Shell + Utility image
+  ## ref: https://hub.docker.com/r/bitnami/os-shell/tags/
+  ## @param volumePermissions.image.registry OS Shell + Utility image registry
+  ## @param volumePermissions.image.repository OS Shell + Utility image repository
+  ## @param volumePermissions.image.tag OS Shell + Utility image tag (immutable tags are recommended)
+  ## @param volumePermissions.image.digest OS Shell + Utility image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
+  ## @param volumePermissions.image.pullPolicy OS Shell + Utility image pull policy
+  ## @param volumePermissions.image.pullSecrets [array] OS Shell + Utility image pull secrets
   ##
   image:
     registry: docker.io
-    repository: bitnami/bitnami-shell
-    tag: 11-debian-11-r4
+    repository: bitnami/os-shell
+    tag: 11-debian-11-r19
+    digest: ""
     pullPolicy: IfNotPresent
     ## Optionally specify an array of imagePullSecrets.
     ## Secrets must be manually created in the namespace.

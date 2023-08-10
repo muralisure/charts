@@ -1,3 +1,8 @@
+{{- /*
+Copyright VMware, Inc.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
+
 {{- if eq .Values.mode "distributed" }}
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
 kind: Deployment
@@ -70,7 +75,7 @@ spec:
           image: {{ include "git.image" . }}
           imagePullPolicy: {{ .Values.git.pullPolicy | quote }}
           command:
-            - /bin/sh
+            - /bin/bash
             - -c
             - |
               [[ -f "/opt/bitnami/scripts/git/entrypoint.sh" ]] && source "/opt/bitnami/scripts/git/entrypoint.sh"
@@ -156,26 +161,26 @@ spec:
             - name: mxnet
               containerPort: {{ .Values.scheduler.containerPorts.mxnet }}
           {{- if not .Values.diagnosticMode.enabled }}
-          {{- if .Values.scheduler.livenessProbe.enabled }}
+          {{- if .Values.scheduler.customLivenessProbe }}
+          livenessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.scheduler.customLivenessProbe "context" $) | nindent 12 }}
+          {{- else if .Values.scheduler.livenessProbe.enabled }}
           livenessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.scheduler.livenessProbe "enabled") "context" $) | nindent 12 }}
             tcpSocket:
               port: mxnet
-          {{- else if .Values.scheduler.customLivenessProbe }}
-          livenessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.scheduler.customLivenessProbe "context" $) | nindent 12 }}
           {{- end }}
-          {{- if .Values.scheduler.readinessProbe.enabled }}
+          {{- if .Values.scheduler.customReadinessProbe }}
+          readinessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.scheduler.customReadinessProbe "context" $) | nindent 12 }}
+          {{- else if .Values.scheduler.readinessProbe.enabled }}
           readinessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.scheduler.readinessProbe "enabled") "context" $) | nindent 12 }}
             tcpSocket:
               port: mxnet
-          {{- else if .Values.scheduler.customReadinessProbe }}
-          readinessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.scheduler.customReadinessProbe "context" $) | nindent 12 }}
           {{- end }}
-          {{- if .Values.scheduler.startupProbe.enabled }}
+          {{- if .Values.scheduler.customStartupProbe }}
+          startupProbe: {{- include "common.tplvalues.render" (dict "value" .Values.scheduler.customStartupProbe "context" $) | nindent 12 }}
+          {{- else if .Values.scheduler.startupProbe.enabled }}
           startupProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.scheduler.startupProbe "enabled") "context" $) | nindent 12 }}
             tcpSocket:
               port: mxnet
-          {{- else if .Values.scheduler.customStartupProbe }}
-          startupProbe: {{- include "common.tplvalues.render" (dict "value" .Values.scheduler.customStartupProbe "context" $) | nindent 12 }}
           {{- end }}
           {{- end }}
           {{- if .Values.scheduler.resources }}

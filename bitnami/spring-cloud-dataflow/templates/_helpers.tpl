@@ -1,3 +1,8 @@
+{{/*
+Copyright VMware, Inc.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
+
 {{/* vim: set filetype=mustache: */}}
 
 {{/*
@@ -315,17 +320,6 @@ Return the RabbitMQ host
 {{- else -}}
     {{- printf "%s" .Values.externalRabbitmq.vhost -}}
 {{- end -}}
-{{- end -}}
-
-{{/*
-Return the Hibernate dialect
-*/}}
-{{- define "scdf.database.hibernate.dialect" -}}
-  {{- if .Values.mariadb.enabled -}}
-    {{- printf "org.hibernate.dialect.MariaDB102Dialect" -}}
-  {{- else -}}
-    {{- .Values.externalDatabase.hibernateDialect -}}
-  {{- end -}}
 {{- end -}}
 
 {{/*

@@ -1,3 +1,8 @@
+{{/*
+Copyright VMware, Inc.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
+
 {{/* vim: set filetype=mustache: */}}
 {{/*
 Expand the name of the chart.
@@ -154,11 +159,11 @@ Get the Postgresql credentials secret.
         {{- if .Values.global.postgresql.auth }}
             {{- if .Values.global.postgresql.auth.existingSecret }}
                 {{- tpl .Values.global.postgresql.auth.existingSecret $ -}}
-            {{- else -}}
-                {{- default (include "airflow.postgresql.fullname" .) (tpl .Values.postgresql.auth.existingSecret $) -}}
             {{- end -}}
         {{- else -}}
-            {{- default (include "airflow.postgresql.fullname" .) (tpl .Values.postgresql.auth.existingSecret $) -}}
+            {{- if and ( .Values.postgresql.auth.existingSecret ) ( .Values.postgresql.auth.enablePostgresUser ) }}
+                {{- default (include "airflow.postgresql.fullname" .) (tpl .Values.postgresql.auth.existingSecret $) -}}
+            {{- end -}}
         {{- end -}}
     {{- else -}}
         {{- default (include "airflow.postgresql.fullname" .) (tpl .Values.postgresql.auth.existingSecret $) -}}
@@ -323,11 +328,16 @@ Add environment variables to configure database values
   value: {{ include "airflow.database.name" . }}
 - name: AIRFLOW_DATABASE_USERNAME
   value: {{ include "airflow.database.user" . }}
+{{- if or (not .Values.postgresql.enabled) .Values.postgresql.auth.enablePostgresUser }}
 - name: AIRFLOW_DATABASE_PASSWORD
   valueFrom:
     secretKeyRef:
       name: {{ include "airflow.postgresql.secretName" . }}
       key: {{ include "airflow.database.existingsecret.key" . }}
+{{- else }}
+- name: ALLOW_EMPTY_PASSWORD
+  value: "true"
+{{- end }}
 - name: AIRFLOW_DATABASE_HOST
   value: {{ include "airflow.database.host" . }}
 - name: AIRFLOW_DATABASE_PORT_NUMBER
@@ -383,7 +393,7 @@ Add environment variables to configure airflow common values
 Add environment variables to configure airflow kubernetes executor
 */}}
 {{- define "airflow.configure.airflow.kubernetesExecutor" -}}
-{{- if (contains .Values.executor "KubernetesExecutor") }}
+{{- if (contains "KubernetesExecutor" .Values.executor) }}
 - name: AIRFLOW__KUBERNETES__NAMESPACE
   value: {{ .Release.Namespace }}
 - name: AIRFLOW__KUBERNETES__WORKER_CONTAINER_REPOSITORY

@@ -1,8 +1,13 @@
+{{- /*
+Copyright VMware, Inc.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
+
 {{- if and .Values.networkPolicy.enabled (or .Values.networkPolicy.ingress.enabled .Values.networkPolicy.metrics.enabled .Values.networkPolicy.ingressRules.accessOnlyFrom.enabled) }}
 apiVersion: {{ include "common.capabilities.networkPolicy.apiVersion" . }}
 kind: NetworkPolicy
 metadata:
-  name: {{ printf "%s-ingress" (include "common.names.fullname" .) }}
+  name: {{ printf "%s-ingress" (include "common.names.fullname" .) | trunc 63 | trimSuffix "-" }}
   namespace: {{ .Release.Namespace | quote }}
   labels: {{- include "common.labels.standard" . | nindent 4 }}
     {{- if .Values.commonLabels }}

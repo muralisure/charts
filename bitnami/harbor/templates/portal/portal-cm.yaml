@@ -1,3 +1,8 @@
+{{- /*
+Copyright VMware, Inc.
+SPDX-License-Identifier: APACHE-2.0
+*/}}
+
 {{- $port := ternary .Values.portal.containerPorts.https .Values.portal.containerPorts.http .Values.internalTLS.enabled | int -}}
 apiVersion: v1
 kind: ConfigMap
@@ -63,6 +68,9 @@ data:
             }
             location = /index.html {
                 add_header Cache-Control "no-store, no-cache, must-revalidate";
+            }
+            location /devcenter-api-2.0 {
+              try_files $uri $uri/ /swagger-ui-index.html;
             }
         }
     }
